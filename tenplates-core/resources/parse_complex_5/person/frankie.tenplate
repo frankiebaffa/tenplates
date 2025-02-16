@@ -1,0 +1,2 @@
+<% extend "./person.tenplate" /%>\
+<% set person_name %>Frankie<% /set %>\

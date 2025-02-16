@@ -1,0 +1,13 @@
+<% extend "../base.tenplate" /%>\
+<% assert person_name /%>\
+<% set refname %>{{ person_name }}<% /set %>\
+<% set reftype %>person<% /set %>\
+<% set headertext %>{{ person_name }}<% /set %>\
+<% set headertag %>h1<% /set %>\
+<% compile "../fragment/header.tenplate" /%>\
+<% set children %>Frankie Jr<% /set %>\
+<% set children %>Frankie II<% /set %>\
+<% foreach child in children as loop %>\
+	<% set forchild %>1<% /set %>\
+	<% compile "../fragment/child.tenplate" /%>\
+<% /foreach %>\

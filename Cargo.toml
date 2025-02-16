@@ -1,0 +1,3 @@
+[workspace]
+members = [ "tenplates-core", "tenplates" ]
+resolver = "2"

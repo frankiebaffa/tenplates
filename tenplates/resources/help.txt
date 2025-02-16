@@ -1,0 +1,11 @@
+tenplates: Compile tenplate files.
+
+USAGE:
+    tenplates -h
+    tenplates -v
+    tenplates <PATH>
+
+ARGUMENTS:
+    -h|--help     Display this help message.
+    -v|--version  Display version.
+    <PATH>        Compile the tenplate file at <PATH>.

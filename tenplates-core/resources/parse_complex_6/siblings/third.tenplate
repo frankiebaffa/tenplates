@@ -1,0 +1,3 @@
+<# ./siblings/third.tenplate #>\
+<% set sibling.name %>Karina<% /set %>\
+<% set sibling.description %>Da baby<% /set %>\

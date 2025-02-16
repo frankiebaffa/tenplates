@@ -1,0 +1,2 @@
+<% extend "./base.tenplate" /%>\
+<% set itemdir %>./item<% /set %>\

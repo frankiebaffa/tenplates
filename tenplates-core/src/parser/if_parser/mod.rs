@@ -160,7 +160,7 @@ where
         loop {
             let c = match self.current()? {
                 Some(c) => c,
-                None => return self.tag_unexpected_eof(self.tagname.to_owned()),
+                None => return self.tag_unexpected_eof(&self.tagname),
             };
 
             match c {
@@ -199,7 +199,7 @@ where
                     match &self.parse_until {
                         ParseUntil::ConditionEnd => match self.condition.as_ref() {
                             Some(c) => if c.join.is_some() {
-                                return self.tag_unexpected_char_expected(self.tagname.to_owned(), ")");
+                                return self.tag_unexpected_char_expected(&self.tagname, ")");
                             }
                             else {
                                 break;
@@ -212,7 +212,7 @@ where
                                 ))));
                             },
                         },
-                        _ => return self.tag_unexpected_char(self.tagname.to_owned()),
+                        _ => return self.tag_unexpected_char(&self.tagname),
                     }
                 },
                 _ => {
@@ -326,7 +326,7 @@ where
                             self.input_mut().into_step()?.step().into_step()?;
                             self.condition_mut().into_step()?.set_join(Join::And);
                         },
-                        _ => return self.tag_unexpected_char(self.tagname.to_owned()),
+                        _ => return self.tag_unexpected_char(&self.tagname),
                     }
                 },
                 '|' => {
@@ -337,7 +337,7 @@ where
                             self.input_mut().into_step()?.step().into_step()?;
                             self.condition_mut().into_step()?.set_join(Join::Or);
                         },
-                        _ => return self.tag_unexpected_char(self.tagname.to_owned()),
+                        _ => return self.tag_unexpected_char(&self.tagname),
                     }
                 },
                 // end of conditions

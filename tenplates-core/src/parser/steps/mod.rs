@@ -140,7 +140,7 @@ where
         }
     }
 
-    fn unexpected_eof_internal(&mut self) -> InternalResult<()> {
+    fn unexpected_eof_internal(&self) -> InternalResult<()> {
         Err(InternalError::new("Unexpected EOF"))
     }
 
@@ -190,27 +190,27 @@ where
 
     fn unknown_tag<T>(&mut self) -> StepResult<T> {
         let tagname = self.buffer_rest_of_tagname()?;
-        Err(Err(InternalError::new(format!("Unknown tag '{}'", tagname))))
+        Err(Err(InternalError::new(format!("Unknown tag '{tagname}'"))))
     }
 
     fn unexpected_tag<T>(&mut self) -> StepResult<T> {
         let tagname = self.buffer_rest_of_tagname()?;
-        Err(Err(InternalError::new(format!("Unexpected tag '{}'", tagname))))
+        Err(Err(InternalError::new(format!("Unexpected tag '{tagname}"))))
     }
 
     fn unknown_end_tag<T>(&mut self) -> StepResult<T> {
         let tagname = self.buffer_rest_of_tagname()?;
-        Err(Err(InternalError::new(format!("Unknown end-tag '{}'", tagname))))
+        Err(Err(InternalError::new(format!("Unknown end-tag '{tagname}"))))
     }
 
     fn unexpected_end_tag<T>(&mut self) -> StepResult<T> {
         let tagname = self.buffer_rest_of_tagname()?;
-        Err(Err(InternalError::new(format!("Unexpected end-tag '{}'", tagname))))
+        Err(Err(InternalError::new(format!("Unexpected end-tag '{tagname}"))))
     }
 
     fn unexpected_eof_in_tag<T>(&mut self) -> StepResult<T> {
         let tagname = self.buffer_rest_of_tagname()?;
-        Err(Err(InternalError::new(format!("Unexpected EOF in tag '{}'", tagname))))
+        Err(Err(InternalError::new(format!("Unexpected EOF in tag '{tagname}"))))
     }
 
     fn current_or_unexpected_eof_in_tag(&mut self) -> StepResult<char> {
@@ -218,6 +218,13 @@ where
             Some(c) => Ok(c),
             None => self.unexpected_eof_in_tag(),
         }
+    }
+
+    fn tag_unexpected_eof<S, T>(&self, tagname: S) -> StepResult<T>
+    where
+        S: AsRef<str>,
+    {
+        Err(Err(InternalError::new(format!("Unexpected EOF in tag '{}'", tagname.as_ref()))))
     }
 
     fn tag_current_or_unexpected_eof<S>(&mut self, tagname: S) -> StepResult<char>
@@ -230,14 +237,7 @@ where
         }
     }
 
-    fn tag_unexpected_eof<S, T>(&mut self, tagname: S) -> StepResult<T>
-    where
-        S: AsRef<str>,
-    {
-        Err(Err(InternalError::new(format!("Unexpected EOF in tag '{}'", tagname.as_ref()))))
-    }
-
-    fn tag_unexpected_eof_expected<S, S2, T>(&mut self, tagname: S, expected: S2) -> StepResult<T>
+    fn tag_unexpected_eof_expected<S, S2, T>(&self, tagname: S, expected: S2) -> StepResult<T>
     where
         S: AsRef<str>,
         S2: AsRef<str>,
@@ -249,14 +249,14 @@ where
         ))))
     }
 
-    fn tag_unexpected_char<S, T>(&mut self, tagname: S) -> StepResult<T>
+    fn tag_unexpected_char<S, T>(&self, tagname: S) -> StepResult<T>
     where
         S: AsRef<str>,
     {
         Err(Err(InternalError::new(format!("Unexpected character in tag '{}'", tagname.as_ref()))))
     }
 
-    fn tag_unexpected_char_expected<S, S2, T>(&mut self, tagname: S, expected: S2) -> StepResult<T>
+    fn tag_unexpected_char_expected<S, S2, T>(&self, tagname: S, expected: S2) -> StepResult<T>
     where
         S: AsRef<str>,
         S2: AsRef<str>,
@@ -268,14 +268,14 @@ where
         ))))
     }
 
-    fn end_tag_unexpected_eof<S, T>(&mut self, tagname: S) -> StepResult<T>
+    fn end_tag_unexpected_eof<S, T>(&self, tagname: S) -> StepResult<T>
     where
         S: AsRef<str>,
     {
         Err(Err(InternalError::new(format!("Unexpected EOF in end-tag '{}'", tagname.as_ref()))))
     }
 
-    fn end_tag_unexpected_char<S, T>(&mut self, tagname: S) -> StepResult<T>
+    fn end_tag_unexpected_char<S, T>(&self, tagname: S) -> StepResult<T>
     where
         S: AsRef<str>,
     {

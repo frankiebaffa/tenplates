@@ -871,7 +871,7 @@ where
                 },
                 EndPosition::Fordir => {},
                 pos => return Err(Err(InternalError::new(format!(
-                    "Invalid end position in 'fordir' tag, '{:?}'", pos
+                    "Invalid end position in 'fordir' tag, '{pos:?}'"
                 )))),
             };
 
@@ -946,7 +946,7 @@ where
                 },
                 EndPosition::Fordir => None,
                 pos => return Err(Err(InternalError::new(format!(
-                    "Invalid end position in 'fordir' tag, '{:?}'", pos
+                    "Invalid end position in 'fordir' tag, '{pos:?}'"
                 )))),
             };
 
@@ -1027,7 +1027,7 @@ where
                 },
                 EndPosition::Foreach => {},
                 pos => return Err(Err(InternalError::new(format!(
-                    "Invalid end position in 'foreach' tag, '{:?}'", pos
+                    "Invalid end position in 'foreach' tag, '{pos:?}'"
                 )))),
             };
 
@@ -1094,7 +1094,7 @@ where
                 },
                 EndPosition::Foreach => None,
                 pos => return Err(Err(InternalError::new(format!(
-                    "Invalid end position in 'foreach' tag, '{:?}'", pos
+                    "Invalid end position in 'foreach' tag, '{pos:?}'"
                 )))),
             };
 
@@ -1181,7 +1181,7 @@ where
                 },
                 EndPosition::Forfile => {},
                 pos => return Err(Err(InternalError::new(format!(
-                    "Invalid end position in 'forfile' tag, '{:?}'", pos
+                    "Invalid end position in 'forfile' tag, '{pos:?}'"
                 )))),
             };
 
@@ -1256,7 +1256,7 @@ where
                 },
                 EndPosition::Forfile => None,
                 pos => return Err(Err(InternalError::new(format!(
-                    "Invalid end position in 'forfile' tag, '{:?}'", pos
+                    "Invalid end position in 'forfile' tag, '{pos:?}'"
                 )))),
             };
 
@@ -1370,7 +1370,7 @@ where
             match end_position {
                 EndPosition::Fn => {},
                 pos => return Err(Err(InternalError::new(format!(
-                    "Invalid end position in 'fn' tag, '{:?}'", pos
+                    "Invalid end position in 'fn' tag, '{pos:?}'"
                 )))),
             };
 
@@ -1394,7 +1394,7 @@ where
             match end_pos {
                 EndPosition::Fn => {},
                 pos => return Err(Err(InternalError::new(format!(
-                    "Invalid end position in 'fn' tag, '{:?}'", pos
+                    "Invalid end position in 'fn' tag, '{pos:?}'"
                 )))),
             }
 
@@ -1443,7 +1443,7 @@ where
                 },
                 EndPosition::If => {},
                 pos => return Err(Err(InternalError::new(format!(
-                    "Invalid end position in 'if' tag, '{:?}'", pos
+                    "Invalid end position in 'if' tag, '{pos:?}'"
                 )))),
             };
 
@@ -1473,7 +1473,7 @@ where
                     Some(else_content)
                 },
                 EndPosition::If => None,
-                pos => return Err(Err(InternalError::new(format!("Invalid end position in 'if' tag, '{:?}'", pos)))),
+                pos => return Err(Err(InternalError::new(format!("Invalid end position in 'if' tag, '{pos:?}'")))),
             };
 
             // parse if block
@@ -1697,7 +1697,7 @@ where
             match end_position {
                 EndPosition::Set => {},
                 pos => return Err(Err(InternalError::new(format!(
-                    "Invalid end position in 'set' tag, '{:?}'", pos
+                    "Invalid end position in 'set' tag, '{pos:?}'"
                 )))),
             };
 

@@ -33,14 +33,11 @@ fn main() {
     let mut path: Option<PathBuf> = None;
 
     let mut args = std::env::args();
-    loop {
-        let mut full_arg = match args.next() {
-            Some(arg) => arg,
-            None => break,
-        };
+    args.next(); // burn program name
 
-        if full_arg.starts_with("--") {
-            match &full_arg[2..] {
+    for full_arg in args {
+        if let Some(long_arg) = full_arg.strip_prefix("--") {
+            match long_arg {
                 "help" => help(),
                 "version" => version(),
                 long_arg => {
@@ -49,22 +46,16 @@ fn main() {
                 },
             }
         }
-        else if full_arg.starts_with('-') {
+        else if full_arg.starts_with('-') && full_arg.len() > 1 {
             let mut short_args = full_arg[1..].chars();
-            loop {
-                let short_arg = match short_args.next() {
-                    Some(short) => short,
-                    None => break,
-                };
-
-                match short_arg {
-                    'h' => help(),
-                    'v' => version(),
-                    short_arg => {
-                        eprintln!("tenplates: unknown arguemnt '-{short_arg}'");
-                        std::process::exit(1);
-                    },
-                }
+            match short_args.next() {
+                Some('h') => help(),
+                Some('v') => version(),
+                Some(short_arg) => {
+                    eprintln!("tenplates: unknown arguemnt '-{short_arg}'");
+                    std::process::exit(1);
+                },
+                _ => panic!("HOW WAS THE ARG NONE!?"),
             }
         }
         else {

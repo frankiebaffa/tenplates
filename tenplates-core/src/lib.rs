@@ -50,7 +50,7 @@ impl Tenplates {
     /// ```rust
     /// use tenplates_core::Tenplates;
     /// 
-    /// let input = "<% set i %>0<% /set %>{{ i }}";
+    /// let input = "{% set i %}0{% /set %}{{ i }}";
     /// let mut output = Vec::<u8>::new();
     /// Tenplates::compile(input, &mut output).unwrap();
     /// let output_str = String::from_utf8(output).unwrap();

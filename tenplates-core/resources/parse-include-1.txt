@@ -1,1 +1,1 @@
-<% execute `this should just be included` %>
+{% execute `this should just be included` %}

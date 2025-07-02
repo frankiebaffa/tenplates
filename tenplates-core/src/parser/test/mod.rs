@@ -33,7 +33,7 @@ fn parse_chars_2() {
 #[test]
 fn parse_extend() {
     let mut output = Vec::<u8>::new();
-    let input = "Some text, and a tag: <% extend \"./resources/template.txt\" /%>";
+    let input = "Some text, and a tag: {% extend \"./resources/template.txt\" /%}";
     let mut parser = TemplateParser::new(Context::default(), input, &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -45,7 +45,7 @@ fn parse_extend() {
 #[test]
 fn parse_set_text() {
     let mut output = Vec::<u8>::new();
-    let input = r#"Some text, and a tag: <% set hello %>Hello, World!<% /set %>"#;
+    let input = r#"Some text, and a tag: {% set hello %}Hello, World!{% /set %}"#;
     let mut parser = TemplateParser::new(Context::default(), input, &mut output).unwrap();
     parser.parse().unwrap();
     let ctx = parser.take_context().unwrap();
@@ -62,7 +62,7 @@ fn parse_set_text() {
 #[test]
 fn parse_set_text_esc() {
     let mut output = Vec::<u8>::new();
-    let input = "Some text, and a tag: <% set hello %>\\<%Hello, World %><% /set %>";
+    let input = "Some text, and a tag: {% set hello %}\\{%Hello, World %}{% /set %}";
     let mut parser = TemplateParser::new(Context::default(), input, &mut output).unwrap();
     parser.parse().unwrap();
     let ctx = parser.take_context().unwrap();
@@ -72,13 +72,13 @@ fn parse_set_text_esc() {
     assert_eq!("Some text, and a tag: ", &output_str);
 
     let hello = ctx.value("hello").unwrap();
-    let against_hello = "<%Hello, World %>";
+    let against_hello = "{%Hello, World %}";
     assert_eq!(&against_hello, hello);
 }
 
 #[test]
 fn parse_escape_1() {
-    let input = r#"This should be included: \<% extend "../something.txt" /%>"#;
+    let input = r#"This should be included: \{% extend "../something.txt" /%}"#;
     let mut output = Vec::new();
     let mut parser = TemplateParser::new(Context::default(), input, &mut output).unwrap();
     parser.parse().unwrap();
@@ -86,7 +86,7 @@ fn parse_escape_1() {
 
     let output_str = String::from_utf8(output).unwrap();
     assert_eq!(
-        "This should be included: <% extend \"../something.txt\" /%>",
+        "This should be included: {% extend \"../something.txt\" /%}",
         &output_str
     );
 }
@@ -94,7 +94,7 @@ fn parse_escape_1() {
 #[test]
 #[should_panic]
 fn parse_unknown_tag() {
-    let input = "<% execut `something` %>";
+    let input = "{% execut `something` %}";
     let mut output = Vec::<u8>::new();
     let mut parser = TemplateParser::new(Context::default(), input, &mut output).unwrap();
     parser.parse().unwrap();
@@ -104,7 +104,7 @@ fn parse_unknown_tag() {
 #[test]
 #[should_panic]
 fn parse_unexpected_eof_in_tag_name() {
-    let input = "<% execut";
+    let input = "{% execut";
     let mut output = Vec::<u8>::new();
     let mut parser = TemplateParser::new(Context::default(), input, &mut output).unwrap();
     parser.parse().unwrap();
@@ -113,7 +113,7 @@ fn parse_unexpected_eof_in_tag_name() {
 
 #[test]
 fn parse_include_1() {
-    let input = "File: <% include \"./resources/parse-include-1.txt\" /%>";
+    let input = "File: {% include \"./resources/parse-include-1.txt\" /%}";
     let mut output = Vec::<u8>::new();
     let mut parser = TemplateParser::new(Context::default(), input, &mut output).unwrap();
     parser.parse().unwrap();
@@ -122,7 +122,7 @@ fn parse_include_1() {
     let output = String::from_utf8(output).unwrap();
 
     assert_eq!(
-        "File: <% execute `this should just be included` %>",
+        "File: {% execute `this should just be included` %}",
         output
     );
 }
@@ -144,7 +144,7 @@ fn parse_include_2() {
 
 #[test]
 fn parse_comment_1() {
-    let input = "Here is some text<# and a comment #> and some more text.";
+    let input = "Here is some text{# and a comment #} and some more text.";
     let mut output = Vec::<u8>::new();
     let mut parser = TemplateParser::new(Context::default(), input, &mut output).unwrap();
     parser.parse().unwrap();
@@ -160,7 +160,7 @@ fn parse_comment_1() {
 
 #[test]
 fn parse_comment_2() {
-    let input = "Here is some text<# and a comment \\#> with escaped #> and some more text.";
+    let input = "Here is some text{# and a comment \\#} with escaped #} and some more text.";
     let mut output = Vec::<u8>::new();
     let mut parser = TemplateParser::new(Context::default(), input, &mut output).unwrap();
     parser.parse().unwrap();
@@ -216,9 +216,9 @@ fn parse_for_multiple() {
     let mut output = Vec::<u8>::new();
     let mut input = String::new();
     input.push_str(r#"Some text, and a tag: \
-        <% set users %>test.user<% /set %>\
-        <% set users %>second.user<% /set %>\
-        <% foreach user in users %>|{{ user }}<% /foreach %>"#);
+        {% set users %}test.user{% /set %}\
+        {% set users %}second.user{% /set %}\
+        {% foreach user in users %}|{{ user }}{% /foreach %}"#);
     let mut parser = TemplateParser::new(Context::default(), input.as_str(), &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -235,7 +235,7 @@ fn parse_for_none_else() {
     let mut output = Vec::<u8>::new();
     let mut input = String::new();
     input.push_str(r#"Some text, and a tag: \
-        <% foreach user in users %>|{{ user }}<% else %>No users.<%/ foreach %>\
+        {% foreach user in users %}|{{ user }}{% else %}No users.{%/ foreach %}\
     "#);
     let mut parser = TemplateParser::new(Context::default(), input.as_str(), &mut output).unwrap();
     parser.parse().unwrap();
@@ -253,7 +253,7 @@ fn parse_for_none_no_else() {
     let mut output = Vec::<u8>::new();
     let mut input = String::new();
     input.push_str(r#"Some text, and a tag: \
-        <% foreach user in users %>|{{ user.username }}<%/ foreach %>\
+        {% foreach user in users %}|{{ user.username }}{%/ foreach %}\
     "#);
     let mut parser = TemplateParser::new(Context::default(), input.as_str(), &mut output).unwrap();
     parser.parse().unwrap();
@@ -272,7 +272,7 @@ fn parse_assert_1() {
     let mut output = Vec::<u8>::new();
     let mut context = Context::default();
     context.add_variable("id", "./", "1");
-    let input = r#"<% assert id == "0" /%>"#;
+    let input = r#"{% assert id == "0" /%}"#;
     let mut parser = TemplateParser::new(context, input, &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -283,7 +283,7 @@ fn parse_assert_2() {
     let mut output = Vec::<u8>::new();
     let mut context = Context::default();
     context.add_variable("id", "./", "1");
-    let input = r#"<% assert id == "1" /%>True"#;
+    let input = r#"{% assert id == "1" /%}True"#;
     let mut parser = TemplateParser::new(context, input, &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -296,7 +296,7 @@ fn parse_if_1() {
     let mut output = Vec::<u8>::new();
     let mut context = Context::default();
     context.add_variable("id", "./", "1");
-    let input = r#"<% if id == "0" %>True<% else %>False<% /if %>"#;
+    let input = r#"{% if id == "0" %}True{% else %}False{% /if %}"#;
     let mut parser = TemplateParser::new(context, input, &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -310,7 +310,7 @@ fn parse_if_2() {
     let mut context = Context::default();
     context.add_variable("id", "./", "2");
     context.add_variable("id2", "./", "5");
-    let input = r#"<% if id == "1" || id2 > "4" %>True<% else %>False<% /if %>"#;
+    let input = r#"{% if id == "1" || id2 > "4" %}True{% else %}False{% /if %}"#;
     let mut parser = TemplateParser::new(context, input, &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -326,7 +326,7 @@ fn parse_if_3() {
     context.add_variable("id2", "./", "5");
     context.add_variable("id3", "./", "10");
     // str(10) < str(2.5)
-    let input = r#"<% if (id1 == "0" || id2 > "4") && "2.5" < id3 %>True<% else %>False<% /if %>"#;
+    let input = r#"{% if (id1 == "0" || id2 > "4") && "2.5" < id3 %}True{% else %}False{% /if %}"#;
     let mut parser = TemplateParser::new(context, input, &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -341,7 +341,7 @@ fn parse_if_4() {
     context.add_variable("id1", "./", "2");
     context.add_variable("id2", "./", "5");
     context.add_variable("id3", "./", "10");
-    let input = r#"<% if id1 == "2" || id2 < "4" || id3 < "2.5" %>True<% else %>False<% /if %>"#;
+    let input = r#"{% if id1 == "2" || id2 < "4" || id3 < "2.5" %}True{% else %}False{% /if %}"#;
     let mut parser = TemplateParser::new(context, input, &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -357,7 +357,7 @@ fn parse_if_5() {
     context.add_variable("id1", "./", "2");
     context.add_variable("id2", "./", "5");
     context.add_variable("id3", "./", "10");
-    let input = r#"<% if (id1 == "2" || id2 < "4") || id3 < "2.5" %>True<% else %>False<% /if %>"#;
+    let input = r#"{% if (id1 == "2" || id2 < "4") || id3 < "2.5" %}True{% else %}False{% /if %}"#;
     let mut parser = TemplateParser::new(context, input, &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -370,7 +370,7 @@ fn parse_if_truthy_1() {
     let mut output = Vec::<u8>::new();
     let mut context = Context::default();
     context.add_variable("id", "./", "2");
-    let input = r#"<% if id %>True<% else %>False<% /if %>"#;
+    let input = r#"{% if id %}True{% else %}False{% /if %}"#;
     let mut parser = TemplateParser::new(context, input, &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -383,7 +383,7 @@ fn parse_if_truthy_2() {
     let mut output = Vec::<u8>::new();
     let mut context = Context::default();
     context.add_variable("id", "./", "0");
-    let input = r#"<% if id %>True<% else %>False<% /if %>"#;
+    let input = r#"{% if id %}True{% else %}False{% /if %}"#;
     let mut parser = TemplateParser::new(context, input, &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -397,7 +397,7 @@ fn parse_if_truthy_3() {
     let mut context = Context::default();
     context.add_variable("a", "./", "1");
     context.add_variable("b", "./", "0");
-    let input = r#"<% if b || a %>True<% else %>False<% /if %>"#;
+    let input = r#"{% if b || a %}True{% else %}False{% /if %}"#;
     let mut parser = TemplateParser::new(context, input, &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -412,7 +412,7 @@ fn parse_if_truthy_4() {
     let mut context = Context::default();
     context.add_variable("a", "./", "1");
     context.add_variable("b", "./", "0");
-    let input = r#"<% if (b || a) %>True<% else %>False<% /if %>"#;
+    let input = r#"{% if (b || a) %}True{% else %}False{% /if %}"#;
     let mut parser = TemplateParser::new(context, input, &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -426,7 +426,7 @@ fn parse_if_mixed_1() {
     let mut context = Context::default();
     context.add_variable("a", "./", "1");
     context.add_variable("b", "./", "0");
-    let input = r#"<% if (b || (b == "0" && a)) %>True<% else %>False<% /if %>"#;
+    let input = r#"{% if (b || (b == "0" && a)) %}True{% else %}False{% /if %}"#;
     let mut parser = TemplateParser::new(context, input, &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -439,15 +439,15 @@ fn nested_parse_if_and_for() {
     let mut output = Vec::<u8>::new();
     let mut input = String::new();
     input.push_str(r#"Some text, and a tag: \
-    <% set users %>test.user<% /set %>\
-    <% set users %>second.user<% /set %>\
-    <% foreach user in users as loop %>\
-        <% if loop.isfirst %><% else %>, <% /if %>\
+    {% set users %}test.user{% /set %}\
+    {% set users %}second.user{% /set %}\
+    {% foreach user in users as loop %}\
+        {% if loop.isfirst %}{% else %}, {% /if %}\
         {{ user }}\
-        <% if loop.islast %>.<% /if %>\
-    <% else %>\
+        {% if loop.islast %}.{% /if %}\
+    {% else %}\
         No users.\
-    <%/ foreach %>"#);
+    {%/ foreach %}"#);
     let mut parser = TemplateParser::new(Context::default(), input.as_str(), &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);
@@ -504,7 +504,7 @@ fn parse_complex_2() {
 #[should_panic]
 fn unexpected_eof() {
     let mut output = Vec::<u8>::new();
-    let input = r#"<% let str1 = "First section"#;
+    let input = r#"{% let str1 = "First section"#;
     let mut parser = TemplateParser::new(Context::default(), input, &mut output).unwrap();
     parser.parse().unwrap();
     drop(parser);

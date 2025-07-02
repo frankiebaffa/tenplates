@@ -415,14 +415,14 @@ where
     where
         S: AsRef<str>,
     {
-        self.buffer_all_until_sequence(tagname, &['/', '%', '>'])
+        self.buffer_all_until_sequence(tagname, &['/', '%', '}'])
     }
 
     fn buffer_all_until_end_of_tag<S>(&mut self, tagname: S) -> StepResult<()>
     where
         S: AsRef<str>,
     {
-        self.buffer_all_until_sequence(tagname, &['%', '>'])
+        self.buffer_all_until_sequence(tagname, &['%', '}'])
     }
 
     fn bypass_all_until<F>(&mut self, matches: F) -> StepResult<()>
@@ -528,7 +528,7 @@ where
 
         self.tag_expect_char(tagname.as_ref(), |c| matches!(c, '/'))?;
         self.tag_expect_char(tagname.as_ref(), |c| matches!(c, '%'))?;
-        self.tag_expect_char(tagname, |c| matches!(c, '>'))?;
+        self.tag_expect_char(tagname, |c| matches!(c, '}'))?;
 
         Ok(())
     }
@@ -540,7 +540,7 @@ where
         self.bypass_whitespace()?;
 
         self.tag_expect_char(tagname.as_ref(), |c| matches!(c, '%'))?;
-        self.tag_expect_char(tagname.as_ref(), |c| matches!(c, '>'))?;
+        self.tag_expect_char(tagname.as_ref(), |c| matches!(c, '}'))?;
 
         Ok(())
     }
@@ -552,7 +552,7 @@ where
         self.bypass_whitespace()?;
 
         self.end_tag_expect_char(tagname.as_ref(), |c| matches!(c, '%'))?;
-        self.end_tag_expect_char(tagname.as_ref(), |c| matches!(c, '>'))?;
+        self.end_tag_expect_char(tagname.as_ref(), |c| matches!(c, '}'))?;
 
         Ok(())
     }
@@ -564,7 +564,7 @@ where
         self.buffer_whitespace()?;
 
         self.tag_expect_buffer_char(tagname.as_ref(), |c| matches!(c, '%'))?;
-        self.tag_expect_buffer_char(tagname.as_ref(), |c| matches!(c, '>'))?;
+        self.tag_expect_buffer_char(tagname.as_ref(), |c| matches!(c, '}'))?;
 
         Ok(())
     }
@@ -576,7 +576,7 @@ where
         self.buffer_whitespace()?;
 
         self.end_tag_expect_buffer_char(tagname.as_ref(), |c| matches!(c, '%'))?;
-        self.end_tag_expect_buffer_char(tagname.as_ref(), |c| matches!(c, '>'))?;
+        self.end_tag_expect_buffer_char(tagname.as_ref(), |c| matches!(c, '}'))?;
 
         Ok(())
     }

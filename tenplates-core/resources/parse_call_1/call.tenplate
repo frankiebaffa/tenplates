@@ -1,1 +1,1 @@
-<% set id %>1<% /set %>\
+{% set id %}1{% /set %}\

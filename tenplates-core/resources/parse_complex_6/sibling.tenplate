@@ -1,6 +1,6 @@
-<# ./sibling.tenplate #>\
-<% assert sibling.filepath /%>\
-<% call sibling.filepath /%>\
-<% assert sibling.name /%>\
-<% assert sibling.description /%>\
+{# ./sibling.tenplate #}\
+{% assert sibling.filepath /%}\
+{% call sibling.filepath /%}\
+{% assert sibling.name /%}\
+{% assert sibling.description /%}\
 <tr><td>{{ sibling.name }}</td><td>{{ sibling.description }}.</td></tr>\

@@ -1,2 +1,2 @@
-<% extend "./person.tenplate" /%>\
-<% set person_name %>Frankie<% /set %>\
+{% extend "./person.tenplate" /%}\
+{% set person_name %}Frankie{% /set %}\

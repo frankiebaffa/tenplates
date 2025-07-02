@@ -1428,7 +1428,7 @@ where
                 return self.unknown_tag();
             }
 
-            self.buffer_all_until_sequence("if", &['%', '>'])?;
+            self.buffer_all_until_sequence("if", &['%', '}'])?;
             self.output_mut().into_step()?.flush_buffer_to_content();
 
             let (content, end_position) = self.parse_bypassed(ParseUntil::EndIf)
@@ -2203,7 +2203,7 @@ where
 
     fn parse_comment(&mut self) -> StepResult<()> {
         if self.bypass() {
-            self.buffer_all_until_sequence("comment", &['#', '>'])
+            self.buffer_all_until_sequence("comment", &['#', '}'])
         }
         else {
             // clear buffer, we got a comment
@@ -2225,7 +2225,7 @@ where
                             None => return Err(Err(InternalError::new("Unclosed comment"))),
                         };
 
-                        if c == '>' {
+                        if c == '}' {
                             self.input_mut().into_step()?.step().into_step()?;
                             break;
                         }
@@ -2244,23 +2244,6 @@ where
         }
     }
 
-    fn parse_lt(&mut self) -> StepResult<()> {
-        match self.current_or_unexpected_eof_in_tag()? {
-            '%' => {
-                self.push_step()?;
-                self.parse_tag()
-            },
-            '#' => {
-                self.push_step()?;
-                self.parse_comment()
-            },
-            _ => {
-                self.output_mut().into_step()?.flush_buffer_to_content();
-                Ok(())
-            },
-        }
-    }
-    
     fn parse_output(&mut self) -> StepResult<()> {
         if self.bypass() {
             self.buffer_whitespace()?;
@@ -2299,6 +2282,14 @@ where
             '{' => {
                 self.push_step()?;
                 self.parse_output()
+            },
+            '%' => {
+                self.push_step()?;
+                self.parse_tag()
+            },
+            '#' => {
+                self.push_step()?;
+                self.parse_comment()
             },
             _ => {
                 self.output_mut().into_step()?.flush_buffer_to_content();
@@ -2343,10 +2334,6 @@ where
 
             let c = flow_internal!(self.current_or_continue());
             let res = match c {
-                '<' => {
-                    self.push_step_internal().or_else_upgrade(self)?;
-                    self.parse_lt().or_else_upgrade(self)
-                },
                 '{' => {
                     self.push_step_internal().or_else_upgrade(self)?;
                     self.parse_bracket().or_else_upgrade(self)

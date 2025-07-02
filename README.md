@@ -1,6 +1,8 @@
-# Ten Plates
+> _Alright, fine. I can't stack ten plates, but I'll stack templated text files
+> like it's nobody's business._  
+> - **Me**
 
-## <a id="tags"></a>Tags
+## <a id="tags">Tags</a>
 
 ### <a id="t-assert">Assert</a>
 
@@ -8,7 +10,7 @@ Verifies that a [condition](#conditions) is truthy before continuing, will throw
 at compile-time otherwise.
 
 ```tenplate
-<% assert "1" /%>
+{% assert "1" /%}
 ```
 
 ### <a id="t-call">Call</a>
@@ -17,15 +19,15 @@ Processes an external file inline, modifying the existing [context](#g-context)
 along the way.
 
 ```tenplate
-<# ./functions/header.tenplate #>\
-<% fn header(lvl, txt) %>\
+{# ./functions/header.tenplate #}\
+{% fn header(lvl, txt) %}\
     <h{{ lvl }}>{{ txt }}</h{{ lvl }}>\
-<% /fn %>\
+{% /fn %}\
 ```
 
 ```tenplate
-<% call "./functions/header.tenplate" /%>\
-<% exec header("2", "Hello") /%>
+{% call "./functions/header.tenplate" /%}\
+{% exec header("2", "Hello") /%}
 ```
 
 ```txt
@@ -42,7 +44,7 @@ The following other tag(s) were used in this example.
 Instructs the compiler to skip all content contained within the open/close tags.
 
 ```tenplate
-<# this is a comment #>
+{# this is a comment #}
 ```
 
 ### <a id="t-compile">Compile</a>
@@ -51,13 +53,13 @@ Processes an external file inline without modifying the existing
 [context](#g-context).
 
 ```tenplate
-<# ./set/name.tenplate #>\
-<% set name %>Frankie<% /set %>\
+{# ./set/name.tenplate #}\
+{% set name %}Frankie{% /set %}\
 ```
 
 ```tenplate
-<% set name %>Matthew<% /set %>\
-<% compile "./set/name.tenplate" /%>{{ name }}
+{% set name %}Matthew{% /set %}\
+{% compile "./set/name.tenplate" /%}{{ name }}
 ```
 
 ```txt
@@ -74,15 +76,15 @@ Executes a function already read into the current [context](#g-context).
 Arguments can be excluded from right-to-left.
 
 ```tenplate
-<% fn commas(a, b, c) %>\
-    {{ a }}, {{ b }}<% if c %>, {{ c }}<% /if %>\
-<% /fn %>\
+{% fn commas(a, b, c) %}\
+    {{ a }}, {{ b }}{% if c %}, {{ c }}{% /if %}\
+{% /fn %}\
 
-<% set d %>foo<% /set %>\
-<% set e %>bar<% /set %>\
+{% set d %}foo{% /set %}\
+{% set e %}bar{% /set %}\
 
-<% exec commas(d, e, "baz") /%>
-<% exec commas(d, e) /%>
+{% exec commas(d, e, "baz") /%}
+{% exec commas(d, e) /%}
 ```
 
 ```txt
@@ -104,25 +106,25 @@ current file. The [context](#g-context) will be passed along and the
 within the same template, the last tag used wins.
 
 ```tenplate
-<# ../papa.tenplate #>\
+{# ../papa.tenplate #}\
 
-<% assert name /%>\
-<% assert paragraph /%>\
+{% assert name /%}\
+{% assert paragraph /%}\
 
 <h1>{{ name }}</h1>
 <p>{{ paragraph }}</p>\
 
-<% if CONTENT %>
+{% if CONTENT %}
 <hr>
 <p>{{ CONTENT }}</p>\
-<% /if %>
+{% /if %}
 ```
 
 ```tenplate
-<% extend "../papa.tenplate" /%>\
+{% extend "../papa.tenplate" /%}\
 
-<% set name %>Frankie<% /set %>\
-<% set paragraph %>This is a paragraph.<% /set %>\
+{% set name %}Frankie{% /set %}\
+{% set paragraph %}This is a paragraph.{% /set %}\
 
 And here is some output content.
 ```
@@ -147,11 +149,11 @@ using the [exec](#t-exec) tag. A function can have anywhere from 0 to _n_
 arguments.
 
 ```tenplate
-<% fn commas(one, two, three) %>\
-    {{ one }}, {{ two }}<% if three %>, {{ three }}<% /if %>.\
-<% /fn %>\
-<% exec commas("First", "Second", "Third") /%>
-<% exec commas("First", "Second") /%>
+{% fn commas(one, two, three) %}\
+    {{ one }}, {{ two }}{% if three %}, {{ three }}{% /if %}.\
+{% /fn %}\
+{% exec commas("First", "Second", "Third") /%}
+{% exec commas("First", "Second") /%}
 ```
 
 ```txt
@@ -164,7 +166,7 @@ The following other tag(s) were used in this example.
 - [_exec_](#t-exec)
 - [_if_](#t-if)
 
-### <a id="t-fordir"></a>Fordir / Else
+### <a id="t-fordir">Fordir / Else</a>
 
 Loops through each directory within a given directory. The element
 [variable](#g-variable) will contain the path of the directory. If a name is
@@ -186,12 +188,12 @@ Assume the following file stucture for the next example.
 ```
 
 ```tenplate
-<% fordir d in "./a-dir" as dir_loop %>\
-    <% if dir_loop.isfirst %><% else %>, <% /if %>\
+{% fordir d in "./a-dir" as dir_loop %}\
+    {% if dir_loop.isfirst %}{% else %}, {% /if %}\
     "{{ d }}"\
-<% else %>\
-    <# no directories in "./a-dir" #>\
-<% /fordir %>
+{% else %}\
+    {# no directories in "./a-dir" #}\
+{% /fordir %}
 ```
 
 ```txt
@@ -211,18 +213,18 @@ identically to the [fordir](#t-fordir) tag.
 
 ```tenplate
 The siblings are \
-<% set names %>Matthew<% /set %>\
-<% set names %>Frankie<% /set %>\
-<% set names %>Karina<% /set %>\
-<% foreach name in items as name_loop %>\
-    <% if name_loop.isfirst %><% else %>, <% /if %>\
-        <% if name_loop.islast %>and <% /if %>\
+{% set names %}Matthew{% /set %}\
+{% set names %}Frankie{% /set %}\
+{% set names %}Karina{% /set %}\
+{% foreach name in items as name_loop %}\
+    {% if name_loop.isfirst %}{% else %}, {% /if %}\
+        {% if name_loop.islast %}and {% /if %}\
         {{ name }}\
-    <% /if %>\
-    <% if name_loop.islast %>.<% /if %>\
-<% else %>\
-    <# no items #>
-<% /foreach %>
+    {% /if %}\
+    {% if name_loop.islast %}.{% /if %}\
+{% else %}\
+    {# no items #}
+{% /foreach %}
 ```
 
 ```txt
@@ -254,30 +256,30 @@ Assume the following file stucture and contents for the next example.
 ```
 
 ```tenplate
-<# ./sibling.tenplate #>\
-<% assert sibling.filepath /%>\
-<% call sibling.filepath /%>\
-<% assert sibling.name /%>\
-<% assert sibling.description /%>\
+{# ./sibling.tenplate #}\
+{% assert sibling.filepath /%}\
+{% call sibling.filepath /%}\
+{% assert sibling.name /%}\
+{% assert sibling.description /%}\
 <tr><td>{{ sibling.name }}</td><td>{{ sibling.description }}.</td></tr>\
 ```
 
 ```tenplate
-<# ./siblings/first.tenplate #>\
-<% set sibling.name %>Matthew<% /set %>\
-<% set sibling.description %>The elder<% /set %>\
+{# ./siblings/first.tenplate #}\
+{% set sibling.name %}Matthew{% /set %}\
+{% set sibling.description %}The elder{% /set %}\
 ```
 
 ```tenplate
-<# ./siblings/second.tenplate #>\
-<% set sibling.name %>Frankie<% /set %>\
-<% set sibling.description %>The poor middle-child<% /set %>
+{# ./siblings/second.tenplate #}\
+{% set sibling.name %}Frankie{% /set %}\
+{% set sibling.description %}The poor middle-child{% /set %}
 ```
 
 ```tenplate
-<# ./siblings/third.tenplate #>\
-<% set sibling.name %>Karina<% /set %>\
-<% set sibling.description %>Da baby<% /set %>\
+{# ./siblings/third.tenplate #}\
+{% set sibling.name %}Karina{% /set %}\
+{% set sibling.description %}Da baby{% /set %}\
 ```
 
 ```tenplate
@@ -289,13 +291,13 @@ Assume the following file stucture and contents for the next example.
         </tr>
     </thead>
     <tbody>\
-        <% set sibsdir %><% path "./siblings" /%><% /set %>\
-        <% set sibtemplate %><% path "./sibling.tenplate" /%><% /set %>\
-        <% forfile sibling.filepath in sibsdir %>
-        <% compile sibtemplate /%>\
-        <% else %>\
-            <# no files in "./a-dir" #>\
-        <% /fordir %>
+        {% set sibsdir %}{% path "./siblings" /%}{% /set %}\
+        {% set sibtemplate %}{% path "./sibling.tenplate" /%}{% /set %}\
+        {% forfile sibling.filepath in sibsdir %}
+        {% compile sibtemplate /%}\
+        {% else %}\
+            {# no files in "./a-dir" #}\
+        {% /fordir %}
     </tbody>
 </table>
 ```
@@ -328,7 +330,7 @@ The following other tag(s) were used in this example.
 Gets a value from a [variable](#g-variable) in [context](#g-context).
 
 ```tenplate
-<% set msg %>Hi<% /set %>\
+{% set msg %}Hi{% /set %}\
 {{ msg }}
 ```
 
@@ -346,11 +348,11 @@ Compiles one of two code-paths depending on whether the [condition](#conditions)
 evaluates to true or false. The `else` tag is an optional inclusion.
 
 ```tenplate
-<% if "1" %>\
+{% if "1" %}\
     True\
-<% else %>\
+{% else %}\
     False\
-<% /if %>
+{% /if %}
 ```
 
 ```txt
@@ -363,17 +365,17 @@ Includes a file inline with compilation. Useful for including files which
 contain `Ten Plates` syntax.
 
 ```tenplate
-<# ./includes/file.tenplate #>\
-<% set name %>Frankie<% /set %>\
+{# ./includes/file.tenplate #}\
+{% set name %}Frankie{% /set %}\
 ```
 
 ```tenplate
-<% include "./includes/file.tenplate" /%>
+{% include "./includes/file.tenplate" /%}
 ```
 
 ```txt
-<# ./includes/file.tenplate#>\
-<% set name %>Frankie<% /set %>\
+{# ./includes/file.tenplate#}\
+{% set name %}Frankie{% /set %}\
 ```
 
 ### <a id="t-set">Set</a>
@@ -385,10 +387,10 @@ iterated over in the order in which they were set using the
 [for-each](#t-foreach) tag.
 
 ```tenplate
-<% set v %>1<% /set %>
+{% set v %}1{% /set %}
 ```
 
-## <a id="conditions"></a>Conditions
+## <a id="conditions">Conditions</a>
 
 A set of one or more of logical assertions evaluating to true or false. These
 can be nested using parenthetical notation or conjoined using the
@@ -397,44 +399,44 @@ are evaluated in their _string_ form so `Ten Plates` performs boolean casting
 on all values.
 
 ```tenplate
-<# true #><% assert "1" /%>
-<# true #><% assert "Hello, World!" /%>
+{# true #}{% assert "1" /%}
+{# true #}{% assert "Hello, World!" /%}
 
-<# false #><% assert "0" /%>
-<# false #><% assert "" /%>
-<# false #><% assert a /%>
+{# false #}{% assert "0" /%}
+{# false #}{% assert "" /%}
+{# false #}{% assert a /%}
 
-<# true #><% set a %>1<% /set %>
-<# true #><% assert "1" == a /%>
+{# true #}{% set a %}1{% /set %}
+{# true #}{% assert "1" == a /%}
 
-<# true #><% set b %>0<% /set %>
-<# true #><% assert a || b /%>
+{# true #}{% set b %}0{% /set %}
+{# true #}{% assert a || b /%}
 
-<# true #><% assert (a && b) || "1" /%>
+{# true #}{% assert (a && b) || "1" /%}
 
-<# true #><% set d %>500<% /set %>
-<# true #><% assert d > a /%>
+{# true #}{% set d %}500{% /set %}
+{# true #}{% assert d > a /%}
 
-<# true #><% assert "501" > d /%>
+{# true #}{% assert "501" > d /%}
 
-<# true #><% assert "501" >= d /%>
+{# true #}{% assert "501" >= d /%}
 
-<# true #><% assert "501" != d /%>
+{# true #}{% assert "501" != d /%}
 
-<# true #><% assert "501" <= d /%>
-<# true #><% assert "501" < d /%>
+{# true #}{% assert "501" <= d /%}
+{# true #}{% assert "501" < d /%}
 ```
 
-## <a id="glossary"></a>Glossary
+## <a id="glossary">Glossary</a>
 
-<a id="g-content"></a>**Content**: The final output of a tenplate.
+<a id="g-content">**Content**</a>: The final output of a tenplate.
 
-<a id="g-context"></a>**Context**: Functions, values, and other data currently
+<a id="g-context">**Context**</a>: Functions, values, and other data currently
 in-scope and usable.
 
-<a id="g-function"></a>**Function**: A block of tenplate keyed with a given
+<a id="g-function">**Function**</a>: A block of tenplate keyed with a given
 name for future retrieval and compilation against an optional set of named
 arguments.
 
-<a id="g-variable"></a>**Variable**: A value in context keyed with a given
+<a id="g-variable">**Variable**</a>: A value in context keyed with a given
 name for future retrieval.

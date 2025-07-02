@@ -91,8 +91,8 @@ mod test {
     #[test]
     fn buffer_all_until_sequence_1() {
         let mut output = Vec::new();
-        let mut parser = str_parser("this that the other \\/%>/%>", &mut output);
-        parser.buffer_all_until_sequence("test", &['/', '%', '>']).unwrap();
+        let mut parser = str_parser("this that the other \\/%}/%}", &mut output);
+        parser.buffer_all_until_sequence("test", &['/', '%', '}']).unwrap();
         // should buffer until end
         assert_eq!(None, parser.input.as_ref().and_then(|i| i.current()));
     }
@@ -100,8 +100,8 @@ mod test {
     #[test]
     fn buffer_all_until_sequence_2() {
         let mut output = Vec::new();
-        let mut parser = str_parser("this that the other /%>/%>", &mut output);
-        parser.buffer_all_until_sequence("test", &['/', '%', '>']).unwrap();
+        let mut parser = str_parser("this that the other /%}/%}", &mut output);
+        parser.buffer_all_until_sequence("test", &['/', '%', '}']).unwrap();
         assert_eq!(Some(&'/'), parser.input.as_ref().and_then(|i| i.current()));
     }
 
@@ -188,7 +188,7 @@ mod test {
     #[test]
     fn expect_end_of_self_close_tag_1() {
         let mut output = Vec::new();
-        let mut parser = str_parser(" /%>", &mut output);
+        let mut parser = str_parser(" /%}", &mut output);
         parser.expect_end_of_self_close_tag("test").unwrap();
         assert_eq!(None, parser.input.as_ref().and_then(|i| i.current()));
     }
@@ -224,7 +224,7 @@ mod test {
     #[test]
     fn expect_end_of_tag_1() {
         let mut output = Vec::new();
-        let mut parser = str_parser(" %>", &mut output);
+        let mut parser = str_parser(" %}", &mut output);
         parser.expect_end_of_tag("test").unwrap();
         assert_eq!(None, parser.input.as_ref().and_then(|i| i.current()));
     }
@@ -312,7 +312,7 @@ mod test {
     fn parse_call() {
         let mut output = Vec::new();
         // "call" would already be parsed out
-        let mut parser = str_parser(" \"./resources/template.txt\" /%>", &mut output);
+        let mut parser = str_parser(" \"./resources/template.txt\" /%}", &mut output);
         parser.parse_call().unwrap();
     }
 
@@ -320,7 +320,7 @@ mod test {
     fn parse_compile() {
         let mut output = Vec::new();
         // "call" would already be parsed out
-        let mut parser = str_parser(" \"./resources/template.txt\" /%>", &mut output);
+        let mut parser = str_parser(" \"./resources/template.txt\" /%}", &mut output);
         parser.parse_compile().unwrap();
     }
 }

@@ -1,7 +1,7 @@
-<% fn test(one, two, three) %>\
-	{{one}}, {{two}}<% if three %>, {{three}}<% /if %>\
-<% /fn %>\
-<% set first %>One<% /set %>\
-<% set second %>Two<% /set %>\
-<% exec test(first, second, "Third") /%>
-<% exec test ("Fourth", "Fifth") /%>
+{% fn test(one, two, three) %}\
+	{{one}}, {{two}}{% if three %}, {{three}}{% /if %}\
+{% /fn %}\
+{% set first %}One{% /set %}\
+{% set second %}Two{% /set %}\
+{% exec test(first, second, "Third") /%}
+{% exec test ("Fourth", "Fifth") /%}

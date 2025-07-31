@@ -657,6 +657,124 @@ fn parse_function_2() {
 }
 
 #[test]
+fn parse_nth_1() {
+    let mut output = Vec::<u8>::new();
+    let mut parser = TemplateParser::new(
+        Context::default(),
+        PathBuf::from("./resources/parse_nth_1/file.tenplate"),
+        &mut output,
+    ).unwrap();
+    parser.parse().unwrap();
+    drop(parser);
+    let output_str = String::from_utf8(output).unwrap();
+
+    assert_eq!("Second", output_str);
+}
+
+#[test]
+fn parse_nth_2() {
+    let mut output = Vec::<u8>::new();
+    let mut parser = TemplateParser::new(
+        Context::default(),
+        PathBuf::from("./resources/parse_nth_2/file.tenplate"),
+        &mut output,
+    ).unwrap();
+    parser.parse().unwrap();
+    drop(parser);
+    let output_str = String::from_utf8(output).unwrap();
+
+    assert_eq!("Second", output_str);
+}
+
+#[test]
+#[should_panic]
+fn parse_nth_3() {
+    let mut output = Vec::<u8>::new();
+    let mut parser = TemplateParser::new(
+        Context::default(),
+        PathBuf::from("./resources/parse_nth_3/file.tenplate"),
+        &mut output,
+    ).unwrap();
+    parser.parse().unwrap();
+    drop(parser);
+}
+
+#[test]
+fn parse_nth_4() {
+    let mut output = Vec::<u8>::new();
+    let mut parser = TemplateParser::new(
+        Context::default(),
+        PathBuf::from("./resources/parse_nth_4/file.tenplate"),
+        &mut output,
+    ).unwrap();
+    parser.parse().unwrap();
+    drop(parser);
+    let output_str = String::from_utf8(output).unwrap();
+
+    assert_eq!("First", output_str);
+}
+
+#[test]
+fn parse_nth_5() {
+    let mut output = Vec::<u8>::new();
+    let mut parser = TemplateParser::new(
+        Context::default(),
+        PathBuf::from("./resources/parse_nth_5/file.tenplate"),
+        &mut output,
+    ).unwrap();
+    parser.parse().unwrap();
+    drop(parser);
+    let output_str = String::from_utf8(output).unwrap();
+
+    assert_eq!("Fifth", output_str);
+}
+
+#[test]
+fn parse_nth_6() {
+    let mut output = Vec::<u8>::new();
+    let mut parser = TemplateParser::new(
+        Context::default(),
+        PathBuf::from("./resources/parse_nth_6/file.tenplate"),
+        &mut output,
+    ).unwrap();
+    parser.parse().unwrap();
+    drop(parser);
+    let output_str = String::from_utf8(output).unwrap();
+
+    assert_eq!("Fourth", output_str);
+}
+
+#[test]
+fn parse_nth_7() {
+    let mut output = Vec::<u8>::new();
+    let mut parser = TemplateParser::new(
+        Context::default(),
+        PathBuf::from("./resources/parse_nth_7/file.tenplate"),
+        &mut output,
+    ).unwrap();
+    parser.parse().unwrap();
+    drop(parser);
+    let output_str = String::from_utf8(output).unwrap();
+
+    assert_eq!("Fourth", output_str);
+}
+
+#[test]
+fn parse_nth_8() {
+    let mut output = Vec::<u8>::new();
+    let mut parser = TemplateParser::new(
+        Context::default(),
+        PathBuf::from("./resources/parse_nth_8/file.tenplate"),
+        &mut output,
+    ).unwrap();
+    parser.parse().unwrap();
+    drop(parser);
+    let output_str = String::from_utf8(output).unwrap();
+
+    assert_eq!("Third", output_str);
+}
+
+#[test]
 fn parse_path_1() {
     let mut output = Vec::<u8>::new();
     let mut parser = TemplateParser::new(
@@ -702,4 +820,200 @@ fn parse_assert_eq_1() {
 		include_str!("../../../resources/assert_not_eq_1/against.txt"),
 		output_str
 	);
+}
+
+#[test]
+fn parse_add_1() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_add_1/file.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("5", output_str);
+}
+
+#[test]
+fn parse_add_2() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_add_2/file.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("4", output_str);
+}
+
+#[test]
+fn parse_sub_1() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_sub_1/file.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("-5", output_str);
+}
+
+#[test]
+fn parse_sub_2() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_sub_2/file.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("1", output_str);
+}
+
+#[test]
+fn parse_mul_1() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_mul_1/file.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("0", output_str);
+}
+
+#[test]
+fn parse_mul_2() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_mul_2/file.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("38", output_str);
+}
+
+#[test]
+fn parse_div_1() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_div_1/file.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("1", output_str);
+}
+
+#[test]
+fn parse_div_2() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_div_2/file.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("3", output_str);
+}
+
+#[test]
+fn parse_mod_1() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_mod_1/file.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("5", output_str);
+}
+
+#[test]
+fn parse_mod_2() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_mod_2/file.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("0", output_str);
+}
+
+#[test]
+fn parse_pow_1() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_pow_1/file.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("25", output_str);
+}
+
+#[test]
+fn parse_pow_2() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_pow_2/file.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("27", output_str);
+}
+
+#[test]
+fn parse_math_1() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_math_1/file.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("99", output_str);
+}
+
+#[test]
+fn parse_math_2() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_math_2/file.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("99", output_str);
 }

@@ -4,8 +4,10 @@ USAGE:
     tenplates -h
     tenplates -v
     tenplates <PATH>
+    tenplates -
 
 ARGUMENTS:
     -h|--help     Display this help message.
     -v|--version  Display version.
     <PATH>        Compile the tenplate file at <PATH>.
+    -             Read from stdin.

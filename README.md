@@ -4,6 +4,26 @@
 
 ## <a id="tags">Tags</a>
 
+### <a id="t-add">Add</a>
+
+Adds together an addend stored in [context](#g-context) and a templated
+addend.
+
+```tenplate
+{% set x %}5{% /set %}\
+{% add x %}10{% /add %}\
+{{ x }}
+```
+
+```txt
+15
+```
+
+The following other tag(s) were used in this example.
+
+- [_get_](#t-get)
+- [_set_](#t-set)
+
 ### <a id="t-assert">Assert</a>
 
 Verifies that a [condition](#conditions) is truthy before continuing, will throw
@@ -64,6 +84,24 @@ Processes an external file inline without modifying the existing
 
 ```txt
 Matthew
+```
+
+The following other tag(s) were used in this example.
+
+- [_set_](#t-set)
+
+### <a id="t-div">Div</a>
+
+Performs division on a dividend in [context](#g-context) and a templated
+divisor.
+
+```tenplate
+{% set x %}4{% /set %}\
+{% div x %}2{% /div %}
+```
+
+```txt
+2
 ```
 
 The following other tag(s) were used in this example.
@@ -378,6 +416,78 @@ contain `Ten Plates` syntax.
 {% set name %}Frankie{% /set %}\
 ```
 
+The following other tag(s) were used in this example.
+
+- [_set_](#t-set)
+
+### <a id="t-mod">Mod</a>
+
+Performs modulo operation on a dividend in [context](#g-context) and a templated
+divisor.
+
+```tenplate
+{% set x %}4{% /set %}\
+{% mod x %}2{% /mod %}
+```
+
+```txt
+0
+```
+
+The following other tag(s) were used in this example.
+
+- [_set_](#t-set)
+
+### <a id="t-mul">Mul</a>
+
+Performs multiplication on a factor in [context](#g-context) and a templated
+factor.
+
+```tenplate
+{% set x %}4{% /set %}\
+{% mul x %}2{% /mul %}
+```
+
+```txt
+8
+```
+
+The following other tag(s) were used in this example.
+
+- [_set_](#t-set)
+
+### <a id="t-nth">Nth</a>
+
+Retrieves the _n_-th element from an array of values.
+
+```tenplate
+{% set arr %}One{% /set %}\
+{% set arr %}Two{% /set %}\
+{% set arr %}Three{% /set %}\
+{% nth arr %}1{% /nth %}
+```
+
+```txt
+Two
+```
+
+The following other tag(s) were used in this example.
+
+- [_set_](#t-set)
+
+### <a id="t-path">Path</a>
+
+Computes the canonical path for a given path. The entry **must** exist in the
+file system to avoid throwing an error.
+
+```tenplate
+{% path "./file.txt" /%}
+```
+
+```txt
+/home/user/file.txt
+```
+
 ### <a id="t-set">Set</a>
 
 Sets a value for a [variable](#g-variable) in [context](#g-context). When
@@ -387,8 +497,35 @@ iterated over in the order in which they were set using the
 [for-each](#t-foreach) tag.
 
 ```tenplate
-{% set v %}1{% /set %}
+{% set v %}1{% /set %}\
+{{ v }}
 ```
+
+```txt
+1
+```
+
+The following other tag(s) were used in this example.
+
+- [_get_](#t-get)
+
+### <a id="t-sub">Sub</a>
+
+Performs subtraction on a minuend in [context](#g-context) and a templated
+subtracahend.
+
+```tenplate
+{% set x %}4{% /set %}\
+{% sub x %}2{% /sub %}
+```
+
+```txt
+2
+```
+
+The following other tag(s) were used in this example.
+
+- [_set_](#t-set)
 
 ## <a id="conditions">Conditions</a>
 

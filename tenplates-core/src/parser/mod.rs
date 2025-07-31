@@ -19,7 +19,6 @@ use {
             steps::*,
         },
         output::Output,
-        //value::{ Row, ToOutput, },
     },
     std::{
         fmt::Debug,
@@ -31,12 +30,19 @@ use {
 
 #[derive(Clone, Debug)]
 pub(crate) enum ParseUntil {
+    EndAdd,
+    EndDiv,
     EndFn,
     EndForeach,
     EndFordir,
     EndForfile,
     EndIf,
+    EndMod,
+    EndMul,
+    EndNth,
+    EndPow,
     EndSet,
+    EndSub,
     Eof,
     // used exclusively by if tag
     ConditionEnd,
@@ -45,13 +51,20 @@ pub(crate) enum ParseUntil {
 
 #[derive(Clone, Debug)]
 pub(crate) enum EndPosition {
+    Add,
     Else,
+    Div,
     Fn,
     Foreach,
     Fordir,
     Forfile,
+    Nth,
     If,
+    Mod,
+    Mul,
+    Pow,
     Set,
+    Sub,
     Eof,
 }
 
@@ -422,6 +435,68 @@ where
         Ok(output_string)
     }
 
+    fn parse_add(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unexpected_tag();
+            }
+
+            self.buffer_all_until_end_of_tag("add")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            let (content, end_position) = self.parse_bypassed(ParseUntil::EndAdd)
+                .into_step()?;
+            self.output_mut().into_step()?.write_bytes_to_buffer(content);
+
+            match end_position {
+                EndPosition::Add => {},
+                pos => return Err(Err(InternalError::new(format!(
+                    "Invalid end position in 'add' tag, '{pos:?}'"
+                )))),
+            };
+
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+        else {
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_tag();
+            }
+
+            self.output_mut().into_step()?.clear_buffer();
+
+            let variable = self.parse_variable_name("add")?;
+            let value = self.context().into_step()?
+                .value_as_i64(&variable)
+                .into_internal("Failed to parse variable as a number")
+                .into_step()?;
+
+            self.expect_end_of_tag("add")?;
+
+            let content = self.parse_child(ParseUntil::EndAdd).into_step()?
+                .trim()
+                .parse::<i64>()
+                .into_internal("Failed to parse content as a number")
+                .into_step()?;
+
+            self.output_mut().into_step()?.write_str(&(value + content).to_string());
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+    }
+
+    fn parse_ad(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'd' => {
+                self.push_step()?;
+                self.parse_add()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
     fn parse_assert(&mut self) -> StepResult<()> {
         if self.bypass() {
             if !self.buffer_whitespace_enforce_one()? {
@@ -498,6 +573,10 @@ where
 
     fn parse_a(&mut self) -> StepResult<()> {
         match self.current_or_unexpected_eof_in_tag()? {
+            'd' => {
+                self.push_step()?;
+                self.parse_ad()
+            },
             's' => {
                 self.push_step()?;
                 self.parse_as()
@@ -647,6 +726,78 @@ where
             'o' => {
                 self.push_step()?;
                 self.parse_co()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_div(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unexpected_tag();
+            }
+
+            self.buffer_all_until_end_of_tag("div")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            let (content, end_position) = self.parse_bypassed(ParseUntil::EndDiv)
+                .into_step()?;
+            self.output_mut().into_step()?.write_bytes_to_buffer(content);
+
+            match end_position {
+                EndPosition::Div => {},
+                pos => return Err(Err(InternalError::new(format!(
+                    "Invalid end position in 'div' tag, '{pos:?}'"
+                )))),
+            };
+
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+        else {
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_tag();
+            }
+
+            self.output_mut().into_step()?.clear_buffer();
+
+            let variable = self.parse_variable_name("div")?;
+            let value = self.context().into_step()?
+                .value_as_i64(&variable)
+                .into_internal("Failed to parse variable as a number")
+                .into_step()?;
+
+            self.expect_end_of_tag("div")?;
+
+            let content = self.parse_child(ParseUntil::EndDiv).into_step()?
+                .trim()
+                .parse::<i64>()
+                .into_internal("Failed to parse content as a number")
+                .into_step()?;
+
+            self.output_mut().into_step()?.write_str(&(value / content).to_string());
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+    }
+
+    fn parse_di(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'v' => {
+                self.push_step()?;
+                self.parse_div()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_d(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'i' => {
+                self.push_step()?;
+                self.parse_di()
             },
             _ => self.unexpected_tag(),
         }
@@ -1591,6 +1742,237 @@ where
         }
     }
 
+    fn parse_mod(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unexpected_tag();
+            }
+
+            self.buffer_all_until_end_of_tag("mod")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            let (content, end_position) = self.parse_bypassed(ParseUntil::EndMod)
+                .into_step()?;
+            self.output_mut().into_step()?.write_bytes_to_buffer(content);
+
+            match end_position {
+                EndPosition::Mod => {},
+                pos => return Err(Err(InternalError::new(format!(
+                    "Invalid end position in 'mod' tag, '{pos:?}'"
+                )))),
+            };
+
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+        else {
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_tag();
+            }
+
+            self.output_mut().into_step()?.clear_buffer();
+
+            let variable = self.parse_variable_name("mod")?;
+            let value = self.context().into_step()?
+                .value_as_i64(&variable)
+                .into_internal("Failed to parse variable as a number")
+                .into_step()?;
+
+            self.expect_end_of_tag("mod")?;
+
+            let content = self.parse_child(ParseUntil::EndMod).into_step()?
+                .trim()
+                .parse::<i64>()
+                .into_internal("Failed to parse content as a number")
+                .into_step()?;
+
+            self.output_mut().into_step()?.write_str(&(value % content).to_string());
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+    }
+
+    fn parse_mo(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'd' => {
+                self.push_step()?;
+                self.parse_mod()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_mul(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unexpected_tag();
+            }
+
+            self.buffer_all_until_end_of_tag("mul")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            let (content, end_position) = self.parse_bypassed(ParseUntil::EndMul)
+                .into_step()?;
+            self.output_mut().into_step()?.write_bytes_to_buffer(content);
+
+            match end_position {
+                EndPosition::Mul => {},
+                pos => return Err(Err(InternalError::new(format!(
+                    "Invalid end position in 'mul' tag, '{pos:?}'"
+                )))),
+            };
+
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+        else {
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_tag();
+            }
+
+            self.output_mut().into_step()?.clear_buffer();
+
+            let variable = self.parse_variable_name("mul")?;
+            let value = self.context().into_step()?
+                .value_as_i64(&variable)
+                .into_internal("Failed to parse variable as a number")
+                .into_step()?;
+
+            self.expect_end_of_tag("mul")?;
+
+            let content = self.parse_child(ParseUntil::EndMul).into_step()?
+                .trim()
+                .parse::<i64>()
+                .into_internal("Failed to parse content as a number")
+                .into_step()?;
+
+            self.output_mut().into_step()?.write_str(&(value * content).to_string());
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+    }
+
+    fn parse_mu(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'l' => {
+                self.push_step()?;
+                self.parse_mul()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_m(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'o' => {
+                self.push_step()?;
+                self.parse_mo()
+            },
+            'u' => {
+                self.push_step()?;
+                self.parse_mu()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_nth(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unexpected_tag();
+            }
+
+            self.buffer_all_until_end_of_tag("nth")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            let (content, end_position) = self.parse_bypassed(ParseUntil::EndNth)
+                .into_step()?;
+            self.output_mut().into_step()?.write_bytes_to_buffer(content);
+
+            match end_position {
+                EndPosition::Nth => {},
+                pos => return Err(Err(InternalError::new(format!(
+                    "Invalid end position in 'nth' tag, '{pos:?}'"
+                )))),
+            };
+
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+        else {
+            self.output_mut().into_step()?.clear_buffer();
+            self.bypass_whitespace()?;
+
+            let alias = self.parse_variable_name("nth")?;
+
+            self.expect_end_of_tag("nth")?;
+
+            let output = self.parse_child(ParseUntil::EndNth).into_step()?;
+            let values = self.context().into_step()?.values(&alias);
+
+            let trimmed = output.trim();
+
+            let was_neg_zero;
+            let idx = if trimmed == "-0" {
+                was_neg_zero = true;
+                0
+            }
+            else {
+                was_neg_zero = false;
+                output.trim()
+                    .parse::<i64>()
+                    .map_err(|_| InternalError::new(format!(
+                        "Content was not an integer:\n{output}"
+                    )))
+                    .into_step()?
+            };
+
+            let idx_to_take = if was_neg_zero || idx < 0_i64 {
+                values.as_ref().map_or(0_usize, |vs| vs.len()
+                    .saturating_sub(1)
+                    .saturating_sub((0 - idx) as usize)
+                )
+            }
+            else {
+                idx as usize
+            };
+
+            let value = values.and_then(
+                |vs| vs.into_iter().nth(idx_to_take).map(|v| v.to_owned())
+            );
+
+            self.output_mut().into_step()?.write_str(&value.unwrap_or(String::new()));
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+    }
+
+    fn parse_nt(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'h' => {
+                self.push_step()?;
+                self.parse_nth()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_n(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            't' => {
+                self.push_step()?;
+                self.parse_nt()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
     fn parse_path(&mut self) -> StepResult<()> {
         if self.bypass() {
             if !self.buffer_whitespace_enforce_one()? {
@@ -1671,11 +2053,87 @@ where
         }
     }
 
+    fn parse_pow(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unexpected_tag();
+            }
+
+            self.buffer_all_until_end_of_tag("pow")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            let (content, end_position) = self.parse_bypassed(ParseUntil::EndPow)
+                .into_step()?;
+            self.output_mut().into_step()?.write_bytes_to_buffer(content);
+
+            match end_position {
+                EndPosition::Pow => {},
+                pos => return Err(Err(InternalError::new(format!(
+                    "Invalid end position in 'pow' tag, '{pos:?}'"
+                )))),
+            };
+
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+        else {
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_tag();
+            }
+
+            self.output_mut().into_step()?.clear_buffer();
+
+            let variable = self.parse_variable_name("pow")?;
+            let value = self.context().into_step()?
+                .value_as_i64(&variable)
+                .into_internal("Failed to parse variable as a number")
+                .into_step()?;
+
+            self.expect_end_of_tag("pow")?;
+
+            let content = self.parse_child(ParseUntil::EndPow).into_step()?
+                .trim()
+                .parse::<i64>()
+                .into_internal("Failed to parse content as a number")
+                .into_step()?;
+
+            let val_u32: u32 = value.try_into()
+                .into_internal("Value was too large for 'pow' operations")
+                .into_step()?;
+            let con_u32: u32 = content.try_into()
+                .into_internal("Content produced too large a number for 'pow' operations")
+                .into_step()?;
+            let pow_u32 = val_u32.checked_pow(con_u32)
+                .into_internal("Value produced by 'pow' operation caused an overflow")
+                .into_step()?;
+
+            self.output_mut().into_step()?.write_str(&pow_u32.to_string());
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+    }
+
+    fn parse_po(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'w' => {
+                self.push_step()?;
+                self.parse_pow()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
     fn parse_p(&mut self) -> StepResult<()> {
         match self.current_or_unexpected_eof_in_tag()? {
             'a' => {
                 self.push_step()?;
                 self.parse_pa()
+            },
+            'o' => {
+                self.push_step()?;
+                self.parse_po()
             },
             _ => self.unexpected_tag(),
         }
@@ -1735,11 +2193,193 @@ where
         }
     }
 
+    fn parse_sub(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unexpected_tag();
+            }
+
+            self.buffer_all_until_end_of_tag("sub")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            let (content, end_position) = self.parse_bypassed(ParseUntil::EndSub)
+                .into_step()?;
+            self.output_mut().into_step()?.write_bytes_to_buffer(content);
+
+            match end_position {
+                EndPosition::Sub => {},
+                pos => return Err(Err(InternalError::new(format!(
+                    "Invalid end position in 'sub' tag, '{pos:?}'"
+                )))),
+            };
+
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+        else {
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_tag();
+            }
+
+            self.output_mut().into_step()?.clear_buffer();
+
+            let variable = self.parse_variable_name("sub")?;
+            let value = self.context().into_step()?
+                .value_as_i64(&variable)
+                .into_internal("Failed to parse variable as a number")
+                .into_step()?;
+
+            self.expect_end_of_tag("sub")?;
+
+            let content = self.parse_child(ParseUntil::EndSub).into_step()?
+                .trim()
+                .parse::<i64>()
+                .into_internal("Failed to parse content as a number")
+                .into_step()?;
+
+            self.output_mut().into_step()?.write_str(&(value - content).to_string());
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+    }
+
+    fn parse_su(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'b' => {
+                self.push_step()?;
+                self.parse_sub()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
     fn parse_s(&mut self) -> StepResult<()> {
         match self.current_or_unexpected_eof_in_tag()? {
             'e' => {
                 self.push_step()?;
                 self.parse_se()
+            },
+            'u' => {
+                self.push_step()?;
+                self.parse_su()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_end_add(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndAdd => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+
+            self.expect_end_of_end_tag_buffer("add")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+            self.set_end_position(EndPosition::Add);
+
+            Err(Ok(FlowControl::Break))
+        }
+        else {
+            self.output_mut().into_step()?.clear_buffer();
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndAdd => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+
+            self.expect_end_of_end_tag("add")?;
+
+            Err(Ok(FlowControl::Break))
+        }
+    }
+
+    fn parse_end_ad(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'd' => {
+                self.push_step()?;
+                self.parse_end_add()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_end_a(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'd' => {
+                self.push_step()?;
+                self.parse_end_ad()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_end_div(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndDiv => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+
+            self.expect_end_of_end_tag_buffer("mul")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+            self.set_end_position(EndPosition::Div);
+
+            Err(Ok(FlowControl::Break))
+        }
+        else {
+            self.output_mut().into_step()?.clear_buffer();
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndDiv => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+
+            self.expect_end_of_end_tag("mul")?;
+
+            Err(Ok(FlowControl::Break))
+        }
+    }
+
+    fn parse_end_di(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'v' => {
+                self.push_step()?;
+                self.parse_end_div()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_end_d(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'i' => {
+                self.push_step()?;
+                self.parse_end_di()
             },
             _ => self.unexpected_tag(),
         }
@@ -2067,6 +2707,230 @@ where
         }
     }
 
+    fn parse_end_mod(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndMod => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+            self.expect_end_of_end_tag_buffer("mod")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+            self.set_end_position(EndPosition::Mod);
+
+            Err(Ok(FlowControl::Break))
+        }
+        else {
+            self.output_mut().into_step()?.clear_buffer();
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndMod => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+
+            self.expect_end_of_end_tag("mod")?;
+
+            Err(Ok(FlowControl::Break))
+        }
+    }
+
+    fn parse_end_mo(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'd' => {
+                self.push_step()?;
+                self.parse_end_mod()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_end_mul(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndMul => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+
+            self.expect_end_of_end_tag_buffer("mul")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+            self.set_end_position(EndPosition::Mul);
+
+            Err(Ok(FlowControl::Break))
+        }
+        else {
+            self.output_mut().into_step()?.clear_buffer();
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndMul => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+
+            self.expect_end_of_end_tag("mul")?;
+
+            Err(Ok(FlowControl::Break))
+        }
+    }
+
+    fn parse_end_mu(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'l' => {
+                self.push_step()?;
+                self.parse_end_mul()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_end_m(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'o' => {
+                self.push_step()?;
+                self.parse_end_mo()
+            },
+            'u' => {
+                self.push_step()?;
+                self.parse_end_mu()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_end_nth(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndNth => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+            self.expect_end_of_end_tag_buffer("nth")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+            self.set_end_position(EndPosition::Nth);
+
+            Err(Ok(FlowControl::Break))
+        }
+        else {
+            self.output_mut().into_step()?.clear_buffer();
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndNth => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+
+            self.expect_end_of_end_tag("nth")?;
+
+            Err(Ok(FlowControl::Break))
+        }
+    }
+
+    fn parse_end_nt(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'h' => {
+                self.push_step()?;
+                self.parse_end_nth()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_end_n(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            't' => {
+                self.push_step()?;
+                self.parse_end_nt()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_end_pow(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndPow => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+
+            self.expect_end_of_end_tag_buffer("pow")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+            self.set_end_position(EndPosition::Pow);
+
+            Err(Ok(FlowControl::Break))
+        }
+        else {
+            self.output_mut().into_step()?.clear_buffer();
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndPow => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+
+            self.expect_end_of_end_tag("pow")?;
+
+            Err(Ok(FlowControl::Break))
+        }
+    }
+
+    fn parse_end_po(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'w' => {
+                self.push_step()?;
+                self.parse_end_pow()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_end_p(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'o' => {
+                self.push_step()?;
+                self.parse_end_po()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
     fn parse_end_set(&mut self) -> StepResult<()> {
         if self.bypass() {
             if !self.buffer_whitespace_enforce_one()? {
@@ -2115,11 +2979,63 @@ where
         }
     }
 
+    fn parse_end_sub(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndSub => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+
+            self.expect_end_of_end_tag_buffer("sub")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+            self.set_end_position(EndPosition::Sub);
+
+            Err(Ok(FlowControl::Break))
+        }
+        else {
+            self.output_mut().into_step()?.clear_buffer();
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndSub => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+
+            self.expect_end_of_end_tag("sub")?;
+
+            Err(Ok(FlowControl::Break))
+        }
+    }
+
+    fn parse_end_su(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'b' => {
+                self.push_step()?;
+                self.parse_end_sub()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
     fn parse_end_s(&mut self) -> StepResult<()> {
         match self.current_or_unexpected_eof_in_tag()? {
             'e' => {
                 self.push_step()?;
                 self.parse_end_se()
+            },
+            'u' => {
+                self.push_step()?;
+                self.parse_end_su()
             },
             _ => self.unexpected_tag(),
         }
@@ -2139,6 +3055,14 @@ where
         self.bypass_whitespace()?;
 
         match self.current_or_unexpected_eof_in_tag()? {
+            'a' => {
+                self.push_step()?;
+                self.parse_end_a()
+            },
+            'd' => {
+                self.push_step()?;
+                self.parse_end_d()
+            },
             'f' => {
                 self.push_step()?;
                 self.parse_end_f()
@@ -2146,6 +3070,18 @@ where
             'i' => {
                 self.push_step()?;
                 self.parse_end_i()
+            },
+            'm' => {
+                self.push_step()?;
+                self.parse_end_m()
+            },
+            'n' => {
+                self.push_step()?;
+                self.parse_end_n()
+            },
+            'p' => {
+                self.push_step()?;
+                self.parse_end_p()
             },
             's' => {
                 self.push_step()?;
@@ -2173,6 +3109,10 @@ where
                 self.push_step()?;
                 self.parse_c()
             },
+            'd' => {
+                self.push_step()?;
+                self.parse_d()
+            },
             'e' => {
                 self.push_step()?;
                 self.parse_e()
@@ -2184,6 +3124,14 @@ where
             'i' => {
                 self.push_step()?;
                 self.parse_i()
+            },
+            'm' => {
+                self.push_step()?;
+                self.parse_m()
+            },
+            'n' => {
+                self.push_step()?;
+                self.parse_n()
             },
             'p' => {
                 self.push_step()?;

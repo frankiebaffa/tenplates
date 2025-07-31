@@ -38,7 +38,7 @@ use {
 /// The tenplates compiler.
 pub struct Tenplates;
 impl Tenplates {
-    /// Compile an input template and to a given output.
+    /// Compile the input template to a given output.
     ///
     /// # Arguments
     ///
@@ -100,6 +100,29 @@ impl Tenplates {
         W: Write + Debug,
     {
         Self::compile(path.as_ref(), output)
+    }
+
+    /// Compile an input template to stdout.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The [readable](Read) template.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use tenplates_core::Tenplates;
+    /// 
+    /// let input = "{% set i %}0{% /set %}{{ i }}";
+    /// Tenplates::compile_to_stdout(input).unwrap();
+    /// ```
+    ///
+    pub fn compile_to_stdout<R, I>(input: I) -> InternalResult<()>
+    where
+        R: Read + Debug,
+        I: TryIntoInput<R>,
+    {
+        Self::compile(input, stdout())
     }
 
     /// Compile a template file to [stdout](std::io::Stdout).

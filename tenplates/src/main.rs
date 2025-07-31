@@ -16,7 +16,7 @@
 
 use {
     tenplates_core::Tenplates,
-    std::path::PathBuf,
+    std::{ io, path::PathBuf, },
 };
 
 fn help() -> ! {
@@ -24,13 +24,23 @@ fn help() -> ! {
 	std::process::exit(0)
 }
 
+fn get_short_version<'a>() -> &'a str {
+    env!("CARGO_PKG_VERSION")
+}
+
+fn short_version() -> ! {
+    println!("{}", get_short_version());
+    std::process::exit(0)
+}
+
 fn version() -> ! {
-    println!("tenplates: v{}", env!("CARGO_PKG_VERSION"));
+    println!("tenplates: v{}", get_short_version());
 	std::process::exit(0)
 }
 
 fn main() {
     let mut path: Option<PathBuf> = None;
+    let mut read_stdin = false;
 
     let mut args = std::env::args();
     args.next(); // burn program name
@@ -50,13 +60,17 @@ fn main() {
             let mut short_args = full_arg[1..].chars();
             match short_args.next() {
                 Some('h') => help(),
-                Some('v') => version(),
+                Some('v') => short_version(),
                 Some(short_arg) => {
                     eprintln!("tenplates: unknown arguemnt '-{short_arg}'");
                     std::process::exit(1);
                 },
                 _ => panic!("HOW WAS THE ARG NONE!?"),
             }
+        }
+        // just a hyphen, signals read from stdin
+        else if full_arg.starts_with('-') {
+            read_stdin = true;
         }
         else {
             if path.is_some() {
@@ -68,12 +82,17 @@ fn main() {
         }
     }
 
-    if path.is_none() {
+    if path.is_none() && !read_stdin {
         eprintln!("tenplates: path must be defined");
         std::process::exit(1);
     }
-
-    if let Err(e) = Tenplates::compile_file_to_stdout(path.unwrap()) {
+    else if read_stdin {
+        if let Err(e) = Tenplates::compile_to_stdout(io::stdin()) {
+            eprintln!("{e}");
+            std::process::exit(1);
+        }
+    }
+    else if let Err(e) = Tenplates::compile_file_to_stdout(path.unwrap()) {
         eprintln!("{e}");
         std::process::exit(1);
     }

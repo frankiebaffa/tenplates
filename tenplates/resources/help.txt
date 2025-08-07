@@ -3,11 +3,14 @@ tenplates: Compile tenplate files.
 USAGE:
     tenplates -h
     tenplates -v
-    tenplates <PATH>
+    tenplates [(-s|--set) <DKV>] <PATH>
     tenplates -
 
 ARGUMENTS:
-    -h|--help     Display this help message.
-    -v|--version  Display version.
-    <PATH>        Compile the tenplate file at <PATH>.
-    -             Read from stdin.
+    -h|--help            Display this help message.
+    -s|--set      <DKV>  Sets a value in context.
+    -v|--version         Display version.
+    <DKV>                A single character delimiter and a key/value pair. I.e
+                         ':key:value' or '=key=value'.
+    <PATH>               Compile the tenplate file at <PATH>.
+    -                    Read from stdin.

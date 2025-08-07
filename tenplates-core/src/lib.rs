@@ -21,7 +21,10 @@ mod macros;
 mod output;
 mod parser;
 
-pub use error::{ InternalResult, InternalError, };
+pub use {
+    context::Context,
+    error::{ InternalResult, InternalError, },
+};
 
 use {
     crate::{
@@ -38,6 +41,42 @@ use {
 /// The tenplates compiler.
 pub struct Tenplates;
 impl Tenplates {
+    /// Compile the input template to a given output with a specific starting
+    /// context.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The [readable](Read) template.
+    /// * `output` - The [writable](Write) output.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use tenplates_core::{ Context, Tenplates, };
+    /// 
+    /// let mut ctx = Context::default();
+    /// ctx.add_variable("x", "./", "5");
+    /// let input = "{% set i %}{% add x %}0{% /add %}{% /set %}{{ i }}";
+    /// let mut output = Vec::<u8>::new();
+    /// Tenplates::compile_with_ctx(input, &mut output, ctx).unwrap();
+    /// let output_str = String::from_utf8(output).unwrap();
+    ///assert_eq!("5", output_str);
+    /// ```
+    ///
+    pub fn compile_with_ctx<R, I, W>(input: I, output: W, ctx: Context) -> InternalResult<()>
+    where
+        R: Read + Debug,
+        I: TryIntoInput<R>,
+        W: Write + Debug,
+    {
+        let input = input.try_into_input()?;
+        let mut parser = TemplateParser::new(ctx, input, output)?;
+
+        parser.parse()?;
+
+        Ok(())
+    }
+
     /// Compile the input template to a given output.
     ///
     /// # Arguments
@@ -63,16 +102,36 @@ impl Tenplates {
         I: TryIntoInput<R>,
         W: Write + Debug,
     {
-        let input = input.try_into_input()?;
-        let mut parser = TemplateParser::new(
-            context::Context::default(),
-            input,
-            output,
-        )?;
+        Self::compile_with_ctx(input, output, Context::default())
+    }
 
-        parser.parse()?;
-
-        Ok(())
+    /// Compile a template file to a given output with a specific context.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The [path](Path) to the file.
+    /// * `output` - The [writable](Write) output.
+    /// * `ctx` - The [context](Context).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use tenplates_core::{ Context, Tenplates, };
+    ///
+    /// let ctx = Context::default();
+    /// let path = "./resources/parse_file_1/page.tenplate";
+    /// let mut output = Vec::<u8>::new();
+    /// Tenplates::compile_file_with_ctx(path, &mut output, ctx).unwrap();
+    /// let output_str = String::from_utf8(output).unwrap();
+    /// assert_eq!("The number: 4", output_str);
+    /// ```
+    ///
+    pub fn compile_file_with_ctx<P, W>(path: P, output: W, ctx: Context) -> InternalResult<()>
+    where
+        P: AsRef<Path>,
+        W: Write + Debug,
+    {
+        Self::compile_with_ctx(path.as_ref(), output, ctx)
     }
 
     /// Compile a template file to a given output.
@@ -102,6 +161,31 @@ impl Tenplates {
         Self::compile(path.as_ref(), output)
     }
 
+    /// Compile an input template to stdout with a specific context.
+    ///
+    /// # Arguments
+    ///
+    /// * `input` - The [readable](Read) template.
+    /// * `ctx` - The [context](Context).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use tenplates_core::{ Context, Tenplates, };
+    /// 
+    /// let ctx = Context::default();
+    /// let input = "{% set i %}0{% /set %}{{ i }}";
+    /// Tenplates::compile_to_stdout_with_ctx(input, ctx).unwrap();
+    /// ```
+    ///
+    pub fn compile_to_stdout_with_ctx<R, I>(input: I, ctx: Context) -> InternalResult<()>
+    where
+        R: Read + Debug,
+        I: TryIntoInput<R>,
+    {
+        Self::compile_with_ctx(input, stdout(), ctx)
+    }
+
     /// Compile an input template to stdout.
     ///
     /// # Arguments
@@ -123,6 +207,33 @@ impl Tenplates {
         I: TryIntoInput<R>,
     {
         Self::compile(input, stdout())
+    }
+
+    /// Compile a template file to [stdout](std::io::Stdout) with a specific
+    /// context.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The [path](Path) to the template.
+    /// * `context` - The [context](Context).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use tenplates_core::{ Context, Tenplates, };
+    ///
+    /// Tenplates::compile_file_to_stdout_with_ctx(
+    ///         "./resources/parse_file_1/page.tenplate",
+    ///         Context::default(),
+    ///         )
+    ///     .unwrap();
+    /// ```
+    ///
+    pub fn compile_file_to_stdout_with_ctx<P>(path: P, ctx: Context) -> InternalResult<()>
+    where
+        P: AsRef<Path>,
+    {
+        Self::compile_file_with_ctx(path, stdout(), ctx)
     }
 
     /// Compile a template file to [stdout](std::io::Stdout).

@@ -1067,10 +1067,32 @@ where
                         self.bypass_whitespace()?;
 
                         loop_variable = Some(self.parse_variable_name("fordir")?);
+
+                        self.bypass_whitespace()?;
                     },
                     _ => return self.tag_unexpected_char("fordir"),
                 }
             }
+
+            let reversed = if self.tag_current_or_unexpected_eof("fordir")? == 'r' {
+                self.push_step()?;
+
+                self.tag_expect_buffer_char("fordir", |c| c.eq(&'e'))?;
+                self.tag_expect_buffer_char("fordir", |c| c.eq(&'v'))?;
+                self.tag_expect_buffer_char("fordir", |c| c.eq(&'e'))?;
+                self.tag_expect_buffer_char("fordir", |c| c.eq(&'r'))?;
+                self.tag_expect_buffer_char("fordir", |c| c.eq(&'s'))?;
+                self.tag_expect_buffer_char("fordir", |c| c.eq(&'e'))?;
+                self.tag_expect_buffer_char("fordir", |c| c.eq(&'d'))?;
+
+                self.output_mut().into_step()?.clear_buffer();
+                self.bypass_whitespace()?;
+
+                true
+            }
+            else {
+                false
+            };
 
             self.expect_end_of_tag("fordir")?;
 
@@ -1103,6 +1125,10 @@ where
 
             if !dirpaths.is_empty() {
                 let last = dirpaths.len();
+
+                if reversed {
+                    dirpaths.reverse();
+                }
 
                 let path = self.input().into_step()?.path().to_owned();
                 for (index, dirpath) in dirpaths.into_iter().enumerate() {
@@ -1221,14 +1247,36 @@ where
                         self.bypass_whitespace()?;
 
                         loop_variable = Some(self.parse_variable_name("foreach")?);
+
+                        self.bypass_whitespace()?;
                     },
                     _ => return self.tag_unexpected_char("foreach"),
                 }
             }
 
+            let reversed = if self.tag_current_or_unexpected_eof("foreach")? == 'r' {
+                self.push_step()?;
+
+                self.tag_expect_buffer_char("foreach", |c| c.eq(&'e'))?;
+                self.tag_expect_buffer_char("foreach", |c| c.eq(&'v'))?;
+                self.tag_expect_buffer_char("foreach", |c| c.eq(&'e'))?;
+                self.tag_expect_buffer_char("foreach", |c| c.eq(&'r'))?;
+                self.tag_expect_buffer_char("foreach", |c| c.eq(&'s'))?;
+                self.tag_expect_buffer_char("foreach", |c| c.eq(&'e'))?;
+                self.tag_expect_buffer_char("foreach", |c| c.eq(&'d'))?;
+
+                self.output_mut().into_step()?.clear_buffer();
+                self.bypass_whitespace()?;
+
+                true
+            }
+            else {
+                false
+            };
+
             self.expect_end_of_tag("foreach")?;
 
-            let values = self.context().into_step()?
+            let mut values = self.context().into_step()?
                 .values(&alias)
                 .unwrap_or(vec![])
                 .into_iter()
@@ -1251,6 +1299,10 @@ where
 
             if !values.is_empty() {
                 let last = values.len();
+
+                if reversed {
+                    values.reverse();
+                }
 
                 let path = self.input().into_step()?.path().to_owned();
                 for (index, value) in values.into_iter().enumerate() {
@@ -1377,10 +1429,32 @@ where
                         self.bypass_whitespace()?;
 
                         loop_variable = Some(self.parse_variable_name("forfile")?);
+
+                        self.bypass_whitespace()?;
                     },
                     _ => return self.tag_unexpected_char("forfile"),
                 }
             }
+
+            let reversed = if self.tag_current_or_unexpected_eof("forfile")? == 'r' {
+                self.push_step()?;
+
+                self.tag_expect_buffer_char("forfile", |c| c.eq(&'e'))?;
+                self.tag_expect_buffer_char("forfile", |c| c.eq(&'v'))?;
+                self.tag_expect_buffer_char("forfile", |c| c.eq(&'e'))?;
+                self.tag_expect_buffer_char("forfile", |c| c.eq(&'r'))?;
+                self.tag_expect_buffer_char("forfile", |c| c.eq(&'s'))?;
+                self.tag_expect_buffer_char("forfile", |c| c.eq(&'e'))?;
+                self.tag_expect_buffer_char("forfile", |c| c.eq(&'d'))?;
+
+                self.output_mut().into_step()?.clear_buffer();
+                self.bypass_whitespace()?;
+
+                true
+            }
+            else {
+                false
+            };
 
             self.expect_end_of_tag("forfile")?;
 
@@ -1413,6 +1487,10 @@ where
 
             if !filepaths.is_empty() {
                 let last = filepaths.len();
+
+                if reversed {
+                    filepaths.reverse();
+                }
 
                 let path = self.input().into_step()?.path().to_owned();
                 for (index, filepath) in filepaths.into_iter().enumerate() {

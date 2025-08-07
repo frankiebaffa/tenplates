@@ -15,7 +15,10 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use {
-    tenplates_core::Tenplates,
+    tenplates_core::{
+        Context,
+        Tenplates,
+    },
     std::{ io, path::PathBuf, },
 };
 
@@ -33,22 +36,73 @@ fn short_version() -> ! {
     std::process::exit(0)
 }
 
+fn set<P: AsRef<std::path::Path>>(ctx: &mut Context, pwd: P, dkv: String) -> bool {
+    if dkv.is_empty() {
+        return false;
+    }
+
+    let mut chars = dkv.chars();
+    let dlim = chars.next().unwrap();
+    let rest = chars.collect::<String>();
+    if rest.is_empty() {
+        return false;
+    }
+
+    let mut split = rest.split(dlim);
+
+    let key = match split.next() {
+        Some(key) => key,
+        None => return false,
+    };
+
+    let val = match split.next() {
+        Some(key) => key,
+        None => return false,
+    };
+
+    if split.next().is_some() {
+        return false;
+    }
+
+    ctx.add_variable(key, pwd, val);
+
+    true
+}
+
 fn version() -> ! {
     println!("tenplates: v{}", get_short_version());
 	std::process::exit(0)
 }
 
 fn main() {
+    let pwd = std::env::current_dir().unwrap();
+
     let mut path: Option<PathBuf> = None;
     let mut read_stdin = false;
+
+    let mut ctx = Context::default();
 
     let mut args = std::env::args();
     args.next(); // burn program name
 
-    for full_arg in args {
+    while let Some(full_arg) = args.next() {
         if let Some(long_arg) = full_arg.strip_prefix("--") {
             match long_arg {
                 "help" => help(),
+                "set" => {
+                    let arg = match args.next() {
+                        Some(arg) => arg,
+                        None => {
+                            eprintln!("tenplates: --set requires a value");
+                            std::process::exit(1);
+                        },
+                    };
+
+                    if !set(&mut ctx, &pwd, arg) {
+                        eprintln!("tenplates: invalid <DKV> passed to --set");
+                        std::process::exit(1);
+                    }
+                },
                 "version" => version(),
                 long_arg => {
                     eprintln!("tenplates: unknown argument '--{long_arg}'");
@@ -60,6 +114,25 @@ fn main() {
             let mut short_args = full_arg[1..].chars();
             match short_args.next() {
                 Some('h') => help(),
+                Some('s') => {
+                    if short_args.next().is_some() {
+                        eprintln!("tenplates: -s requires a value");
+                        std::process::exit(1);
+                    }
+
+                    let arg = match args.next() {
+                        Some(arg) => arg,
+                        None => {
+                            eprintln!("tenplates: -s requires a value");
+                            std::process::exit(1);
+                        },
+                    };
+
+                    if !set(&mut ctx, &pwd, arg) {
+                        eprintln!("tenplates: invalid <DKV> passed to -s");
+                        std::process::exit(1);
+                    }
+                },
                 Some('v') => short_version(),
                 Some(short_arg) => {
                     eprintln!("tenplates: unknown arguemnt '-{short_arg}'");
@@ -87,12 +160,12 @@ fn main() {
         std::process::exit(1);
     }
     else if read_stdin {
-        if let Err(e) = Tenplates::compile_to_stdout(io::stdin()) {
+        if let Err(e) = Tenplates::compile_to_stdout_with_ctx(io::stdin(), ctx) {
             eprintln!("{e}");
             std::process::exit(1);
         }
     }
-    else if let Err(e) = Tenplates::compile_file_to_stdout(path.unwrap()) {
+    else if let Err(e) = Tenplates::compile_file_to_stdout_with_ctx(path.unwrap(), ctx) {
         eprintln!("{e}");
         std::process::exit(1);
     }

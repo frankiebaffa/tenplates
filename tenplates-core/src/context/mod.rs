@@ -102,7 +102,7 @@ impl Context {
         self.variables(key).map(|variables| variables.iter().map(|s| s.value()).collect::<Vec<&String>>())
     }
 
-    pub(crate) fn add_variable<K: AsRef<str>, P: AsRef<Path>, V: AsRef<str>>(&mut self, key: K, path: P, value: V) {
+    pub fn add_variable<K: AsRef<str>, P: AsRef<Path>, V: AsRef<str>>(&mut self, key: K, path: P, value: V) {
         if self.variables_mut(key.as_ref()).is_none() {
             self.variables.insert(key.as_ref().to_owned(), Vec::new());
         }

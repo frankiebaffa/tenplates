@@ -1017,3 +1017,63 @@ fn parse_math_2() {
 	let output_str = String::from_utf8(output).unwrap();
 	assert_eq!("99", output_str);
 }
+
+#[test]
+fn parse_fordir_1() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_fordir_1/loop.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!(
+        concat!(
+            "./resources/parse_fordir_1/./4, ",
+            "./resources/parse_fordir_1/./3, ",
+            "./resources/parse_fordir_1/./2, ",
+            "./resources/parse_fordir_1/./1, ",
+            "./resources/parse_fordir_1/./0",
+        ),
+        output_str
+    );
+}
+
+#[test]
+fn parse_foreach_1() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_foreach_1/loop.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!("4, 3, 2, 1, 0", output_str);
+}
+
+#[test]
+fn parse_forfile_1() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_forfile_1/loop.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!(
+        concat!(
+            "./resources/parse_forfile_1/./files/4, ",
+            "./resources/parse_forfile_1/./files/3, ",
+            "./resources/parse_forfile_1/./files/2, ",
+            "./resources/parse_forfile_1/./files/1, ",
+            "./resources/parse_forfile_1/./files/0",
+        ),
+        output_str
+    );
+}

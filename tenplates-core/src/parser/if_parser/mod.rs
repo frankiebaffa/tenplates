@@ -36,6 +36,12 @@ pub(crate) struct Condition {
     join: Option<Join>,
 }
 
+impl From<bool> for Condition {
+    fn from(input: bool) -> Self {
+        Self { evaluation: input, join: None, }
+    }
+}
+
 impl Condition {
     fn requires_next(&self) -> InternalResult<bool> {
         match self.join {
@@ -52,11 +58,52 @@ impl Condition {
     pub(crate) fn as_evaluation(&self) -> bool {
         self.evaluation
     }
-}
 
-impl From<bool> for Condition {
-    fn from(input: bool) -> Self {
-        Self { evaluation: input, join: None, }
+    fn try_num<F, H>(a: Option<String>, b: Option<String>, num_cmp: F, str_cmp: H) -> Self
+    where
+        F: Fn(&i64, &i64) -> bool,
+        H: Fn(&Option<String>, &Option<String>) -> bool,
+    {
+        if a.is_none() {
+            return Self::from(str_cmp(&a, &b));
+        }
+
+        let ar = a.as_ref().unwrap();
+        let ir = ar.parse::<i64>();
+        if ir.is_err() {
+            return Self::from(str_cmp(&a, &b));
+        }
+
+        if b.is_none() {
+            return Self::from(str_cmp(&a, &b));
+        }
+
+        let br = b.as_ref().unwrap();
+        let jr = br.parse::<i64>();
+        if jr.is_err() {
+            return Self::from(str_cmp(&a, &b));
+        }
+
+        let i = ir.unwrap();
+        let j = jr.unwrap();
+
+        return Self::from(num_cmp(&i, &j));
+    }
+
+    pub(crate) fn gt(a: Option<String>, b: Option<String>) -> Self {
+        return Self::try_num(a, b, i64::gt, Option::<String>::gt);
+    }
+
+    pub(crate) fn ge(a: Option<String>, b: Option<String>) -> Self {
+        return Self::try_num(a, b, i64::ge, Option::<String>::ge);
+    }
+
+    pub(crate) fn lt(a: Option<String>, b: Option<String>) -> Self {
+        return Self::try_num(a, b, i64::lt, Option::<String>::lt);
+    }
+
+    pub(crate) fn le(a: Option<String>, b: Option<String>) -> Self {
+        return Self::try_num(a, b, i64::le, Option::<String>::le);
     }
 }
 
@@ -262,21 +309,23 @@ where
 
                             match self.tag_current_or_unexpected_eof(self.tagname.to_owned())? {
                                 '=' => {
+                                    self.input_mut().into_step()?.step().into_step()?;
                                     self.bypass_whitespace()?;
 
                                     let right_value = self.parse_value(self.tagname.to_owned())?;
                                     self.condition = Some(match self.bypass.as_ref() {
                                         Some(b) => Condition::from(*b),
-                                        None => Condition::from(left_value >= right_value),
+                                        None => Condition::ge(left_value, right_value),
                                     });
                                 },
                                 _ => {
                                     self.bypass_whitespace()?;
 
                                     let right_value = self.parse_value(self.tagname.to_owned())?;
+
                                     self.condition = Some(match self.bypass.as_ref() {
                                         Some(b) => Condition::from(*b),
-                                        None => Condition::from(left_value > right_value),
+                                        None => Condition::gt(left_value, right_value),
                                     });
                                 },
                             }
@@ -286,12 +335,13 @@ where
 
                             match self.tag_current_or_unexpected_eof(self.tagname.to_owned())? {
                                 '=' => {
+                                    self.input_mut().into_step()?.step().into_step()?;
                                     self.bypass_whitespace()?;
 
                                     let right_value = self.parse_value(self.tagname.to_owned())?;
                                     self.condition = Some(match self.bypass.as_ref() {
                                         Some(b) => Condition::from(*b),
-                                        None => Condition::from(left_value <= right_value),
+                                        None => Condition::le(left_value, right_value),
                                     });
                                 },
                                 _ => {
@@ -300,7 +350,7 @@ where
                                     let right_value = self.parse_value(self.tagname.to_owned())?;
                                     self.condition = Some(match self.bypass.as_ref() {
                                         Some(b) => Condition::from(*b),
-                                        None => Condition::from(left_value < right_value),
+                                        None => Condition::lt(left_value, right_value),
                                     });
                                 },
                             }

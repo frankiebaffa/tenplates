@@ -776,7 +776,8 @@ where
                 .into_internal("Failed to parse content as a number")
                 .into_step()?;
 
-            self.output_mut().into_step()?.write_str(&(value / content).to_string());
+            self.output_mut().into_step()?
+                .write_str(&value.checked_div(content).unwrap_or(0).to_string());
             self.output_mut().into_step()?.flush_buffer_to_content();
 
             Ok(())

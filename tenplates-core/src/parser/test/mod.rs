@@ -292,7 +292,7 @@ fn parse_assert_2() {
 }
 
 #[test]
-fn parse_if_1() {
+fn parse_if_inline_1() {
     let mut output = Vec::<u8>::new();
     let mut context = Context::default();
     context.add_variable("id", "./", "1");
@@ -305,7 +305,7 @@ fn parse_if_1() {
 }
 
 #[test]
-fn parse_if_2() {
+fn parse_if_inline_2() {
     let mut output = Vec::<u8>::new();
     let mut context = Context::default();
     context.add_variable("id", "./", "2");
@@ -319,7 +319,7 @@ fn parse_if_2() {
 }
 
 #[test]
-fn parse_if_3() {
+fn parse_if_inline_3() {
     let mut output = Vec::<u8>::new();
     let mut context = Context::default();
     context.add_variable("id1", "./", "2");
@@ -335,7 +335,7 @@ fn parse_if_3() {
 }
 
 #[test]
-fn parse_if_4() {
+fn parse_if_inline_4() {
     let mut output = Vec::<u8>::new();
     let mut context = Context::default();
     context.add_variable("id1", "./", "2");
@@ -351,7 +351,7 @@ fn parse_if_4() {
 
 // should evaluate identically to 4
 #[test]
-fn parse_if_5() {
+fn parse_if_inline_5() {
     let mut output = Vec::<u8>::new();
     let mut context = Context::default();
     context.add_variable("id1", "./", "2");
@@ -1074,6 +1074,61 @@ fn parse_forfile_1() {
             "./resources/parse_forfile_1/./files/1, ",
             "./resources/parse_forfile_1/./files/0",
         ),
+        output_str
+    );
+}
+
+#[test]
+fn parse_if_1() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_if_1/test.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!(
+        "./resources/parse_if_1/./testdir/5",
+        output_str
+    );
+}
+
+#[test]
+fn parse_if_2() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_if_2/if.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!(
+        "0",
+        output_str
+    );
+}
+
+#[test]
+fn parse_fn_call_1() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+        concat!(
+            "{% set fnpath %}{% path \"./resources/parse_fn_call_1/functions/testobj.tenplate\" /%}{% /set %}",
+            "{% call fnpath /%}",
+            "{% exec test.pagesize() /%}\\",
+        ),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!(
+        "10",
         output_str
     );
 }

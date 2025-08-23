@@ -210,8 +210,9 @@ Loops through each directory within a given directory. The element
 [variable](#g-variable) will contain the path of the directory. If a name is
 given for the loop [variable](#g-variable) (`as dir_loop` in the example below),
 the [loop context](#loop-context) will be stored with the given variable as a
-prefix. The `else` condition is triggered when no elements are found for the
-loop.
+prefix. The optional `reversed` keyword can also be used to iterate through the
+items backwards. The `else` condition is triggered when no elements are found
+for the loop.
 
 Assume the following file stucture for the next example.
 
@@ -247,6 +248,7 @@ The following other tag(s) were used in this example.
 Loops through each value in a given variable in [context](#g-context). See
 [set](#t-set) for info on how a [variable](#g-variable) can have multiple
 values. The optional [loop context](#loop-context) definition behaves
+identically to the [fordir](#t-fordir) tag. The `reversed` keyword also behaves
 identically to the [fordir](#t-fordir) tag.
 
 ```tenplate
@@ -278,6 +280,7 @@ The following other tag(s) were used in this example.
 Loops through each file in a given directory. The element
 [variable](#g-variable) will contain the path. The optional
 [loop context](#loop-context) definition behaves identically to the
+[fordir](#t-fordir) tag. The `reversed` keyword also behaves identically to the
 [fordir](#t-fordir) tag.
 
 Assume the following file stucture and contents for the next example.
@@ -362,6 +365,29 @@ The following other tag(s) were used in this example.
 - [_compile_](#t-compile)
 - [_path_](#t-path)
 - [_set_](#t-set)
+
+### <a id="t-forsplit">Forsplit / Else</a>
+
+Loop through sections of a string split on a given delimiter. The
+[variable](#g-variable) will contain the current section. The string value can
+be provided literally or from [context](#g-context). The delimiter can be
+provided literally or from [context](#g-context) as well. The optional
+[loop context](#loop-context) definition behaves identically to the
+[fordir](#t-fordir) tag. The `reversed` keyword also behaves identically to the
+[fordir](#t-fordir) tag.
+
+```tenplate
+{% forsplit number in "0,1,2,3,4" on "," reversed %}\
+    {% set output %}{{ number }}{% /set %}\
+{% /forsplit %}\
+{% foreach number in output as nloop %}\
+    {% if nloop.isfirst %}{% else %}, {% /if %}{{ number }}\
+{% /foreach %}
+```
+
+```txt
+4, 3, 2, 1
+```
 
 ### <a id="t-get">Get</a>
 

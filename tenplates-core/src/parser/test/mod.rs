@@ -1132,3 +1132,88 @@ fn parse_fn_call_1() {
         output_str
     );
 }
+
+#[test]
+fn parse_forsplit_1() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_forsplit_1/test.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!(
+        "0, 1, 2, 3, 4, 5",
+        output_str
+    );
+}
+
+#[test]
+fn parse_forsplit_2() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_forsplit_2/test.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!(
+        "5+4+3+2+1+0",
+        output_str
+    );
+}
+
+#[test]
+fn parse_forsplit_3() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_forsplit_3/test.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!(
+        "iii",
+        output_str
+    );
+}
+
+#[test]
+fn parse_forsplit_4() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_forsplit_4/test.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!(
+        "No items.",
+        output_str
+    );
+}
+
+#[test]
+fn parse_forsplit_5() {
+	let mut output = Vec::<u8>::new();
+	let mut parser = TemplateParser::new(
+		Context::default(),
+		PathBuf::from("./resources/parse_forsplit_5/test.tenplate"),
+		&mut output,
+	).unwrap();
+	parser.parse().unwrap();
+	drop(parser);
+	let output_str = String::from_utf8(output).unwrap();
+	assert_eq!(
+        "No items.",
+        output_str
+    );
+}

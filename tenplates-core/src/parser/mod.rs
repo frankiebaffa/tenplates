@@ -36,6 +36,7 @@ pub(crate) enum ParseUntil {
     EndForeach,
     EndFordir,
     EndForfile,
+    EndForsplit,
     EndIf,
     EndMod,
     EndMul,
@@ -58,6 +59,7 @@ pub(crate) enum EndPosition {
     Foreach,
     Fordir,
     Forfile,
+    Forsplit,
     Nth,
     If,
     Mod,
@@ -810,6 +812,7 @@ where
                 ParseUntil::EndFordir|
                 ParseUntil::EndForeach|
                 ParseUntil::EndForfile|
+                ParseUntil::EndForsplit|
                 ParseUntil::EndIf => {},
                 _ => {
                     return self.unexpected_tag();
@@ -827,6 +830,7 @@ where
                 ParseUntil::EndFordir|
                 ParseUntil::EndForeach|
                 ParseUntil::EndForfile|
+                ParseUntil::EndForsplit|
                 ParseUntil::EndIf => {},
                 _ => {
                     return self.unexpected_tag();
@@ -1556,6 +1560,215 @@ where
         }
     }
 
+    fn parse_forsplit(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unexpected_tag();
+            }
+
+            self.buffer_all_until_end_of_tag("forsplit")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            let (content, end_position) = self.parse_bypassed(ParseUntil::EndForsplit)
+                .into_step()?;
+            self.output_mut().into_step()?.write_bytes_to_buffer(content);
+
+            match end_position {
+                EndPosition::Else => {
+                    let (else_content, ..) = self.parse_bypassed(ParseUntil::EndForsplit)
+                        .into_step()?;
+                    self.output_mut().into_step()?.write_bytes_to_buffer(else_content);
+                },
+                EndPosition::Forsplit => {},
+                pos => return Err(Err(InternalError::new(format!(
+                    "Invalid end position in 'forsplit' tag, '{pos:?}'"
+                )))),
+            };
+
+            self.output_mut().into_step()?.flush_buffer_to_content();
+
+            Ok(())
+        }
+        else {
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_tag();
+            }
+
+            self.output_mut().into_step()?.clear_buffer();
+
+            let variable = self.parse_variable_name("forsplit")?;
+
+            if !self.bypass_whitespace_enforce_one()? {
+                return Err(Err(InternalError::new("Unexpected character in 'forsplit' tag")));
+            }
+
+            self.tag_expect_char("forsplit", |c| matches!(c, 'i'))?;
+            self.tag_expect_char("forsplit", |c| matches!(c, 'n'))?;
+
+            if !self.bypass_whitespace_enforce_one()? {
+                return Err(Err(InternalError::new("Unexpected character in 'forsplit' tag")));
+            }
+
+            let str_value = self.parse_value("forsplit")?;
+
+            self.bypass_whitespace()?;
+
+            self.tag_expect_char("forsplit", |c| matches!(c, 'o'))?;
+            self.tag_expect_char("forsplit", |c| matches!(c, 'n'))?;
+
+            self.bypass_whitespace()?;
+
+            let delimiter = self.parse_value("forsplit")?;
+
+            self.bypass_whitespace()?;
+
+            let mut loop_variable = None;
+            if self.tag_current_or_unexpected_eof("forsplit")? == 'a' {
+                self.push_step()?;
+
+                match self.tag_current_or_unexpected_eof("forsplit")? {
+                    's' => {
+                        self.push_step()?;
+
+                        self.bypass_whitespace()?;
+
+                        loop_variable = Some(self.parse_variable_name("forsplit")?);
+
+                        self.bypass_whitespace()?;
+                    },
+                    _ => return self.tag_unexpected_char("forsplit"),
+                }
+            }
+
+            let reversed = if self.tag_current_or_unexpected_eof("forsplit")? == 'r' {
+                self.push_step()?;
+
+                self.tag_expect_buffer_char("forsplit", |c| c.eq(&'e'))?;
+                self.tag_expect_buffer_char("forsplit", |c| c.eq(&'v'))?;
+                self.tag_expect_buffer_char("forsplit", |c| c.eq(&'e'))?;
+                self.tag_expect_buffer_char("forsplit", |c| c.eq(&'r'))?;
+                self.tag_expect_buffer_char("forsplit", |c| c.eq(&'s'))?;
+                self.tag_expect_buffer_char("forsplit", |c| c.eq(&'e'))?;
+                self.tag_expect_buffer_char("forsplit", |c| c.eq(&'d'))?;
+
+                self.output_mut().into_step()?.clear_buffer();
+                self.bypass_whitespace()?;
+
+                true
+            }
+            else {
+                false
+            };
+
+            self.expect_end_of_tag("forsplit")?;
+
+            let mut values = match str_value {
+                Some(str_value) => match delimiter {
+                    Some(delimiter) => if !delimiter.is_empty() {
+                        str_value.split(&delimiter)
+                            .map(|s| s.to_owned())
+                            .collect::<Vec<String>>()
+                    }
+                    else {
+                        str_value.chars()
+                            .map(|c| c.to_string())
+                            .collect::<Vec<String>>()
+                    },
+                    None => str_value.chars().map(|c| c.to_string()).collect::<Vec<String>>(),
+                },
+                None => Vec::new(),
+            };
+
+            let (content, end_position) = self.parse_bypassed(ParseUntil::EndForsplit)
+                .into_step()?;
+            let else_content = match end_position {
+                EndPosition::Else => {
+                    let (else_content, ..) = self.parse_bypassed(ParseUntil::EndForsplit)
+                        .into_step()?;
+                    Some(else_content)
+                },
+                EndPosition::Forsplit => None,
+                pos => return Err(Err(InternalError::new(format!(
+                    "Invalid end position in 'forsplit' tag, '{pos:?}'"
+                )))),
+            };
+
+            if !values.is_empty() {
+                let last = values.len();
+
+                if reversed {
+                    values.reverse();
+                }
+
+                let path = self.input().into_step()?.path().to_owned();
+                for (index, value) in values.into_iter().enumerate() {
+                    self.context_mut().into_step()?.add_variable(&variable, &path, value.clone());
+
+                    if let Some(loop_variable) = loop_variable.clone() {
+                        self.context_mut().into_step()?
+                            .add_variable(format!("{loop_variable}.index"), &path, index.to_string());
+                        self.context_mut().into_step()?
+                            .add_variable(format!("{loop_variable}.size"), &path, last.to_string());
+                        self.context_mut().into_step()?
+                            .add_variable(format!("{loop_variable}.isfirst"), &path, if index == 0 { "1" } else { "0" });
+                        self.context_mut().into_step()?
+                            .add_variable(format!("{loop_variable}.islast"), &path, if index + 1 == last { "1" } else { "0" });
+                    }
+
+                    self.parse_limited(content.as_slice(), ParseUntil::EndForsplit).into_step()?;
+
+                    self.context_mut().into_step()?.pop_variable(&variable);
+                }
+            }
+            else if let Some(content) = else_content {
+                self.parse_limited(content.as_slice(), ParseUntil::EndForsplit)
+                    .into_step()?;
+            }
+
+            Ok(())
+        }
+    }
+
+    fn parse_forspli(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            't' => {
+                self.push_step()?;
+                self.parse_forsplit()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_forspl(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'i' => {
+                self.push_step()?;
+                self.parse_forspli()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_forsp(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'l' => {
+                self.push_step()?;
+                self.parse_forspl()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_fors(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'p' => {
+                self.push_step()?;
+                self.parse_forsp()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
     fn parse_for(&mut self) -> StepResult<()> {
         match self.current_or_unexpected_eof_in_tag()? {
             'd' => {
@@ -1569,6 +1782,10 @@ where
             'f' => {
                 self.push_step()?;
                 self.parse_forf()
+            },
+            's' => {
+                self.push_step()?;
+                self.parse_fors()
             },
             _ => self.unexpected_tag(),
         }
@@ -2658,6 +2875,84 @@ where
         }
     }
 
+    fn parse_end_forsplit(&mut self) -> StepResult<()> {
+        if self.bypass() {
+            if !self.buffer_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndForsplit => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+
+            self.expect_end_of_end_tag_buffer("forsplit")?;
+            self.output_mut().into_step()?.flush_buffer_to_content();
+            self.set_end_position(EndPosition::Forsplit);
+
+            Err(Ok(FlowControl::Break))
+        }
+        else {
+            self.output_mut().into_step()?.clear_buffer();
+            if !self.bypass_whitespace_enforce_one()? {
+                return self.unknown_end_tag();
+            }
+
+            match self.parse_until() {
+                ParseUntil::EndForsplit => {},
+                _ => {
+                    return self.unexpected_end_tag();
+                },
+            }
+
+            self.expect_end_of_end_tag("forsplit")?;
+
+            Err(Ok(FlowControl::Break))
+        }
+    }
+
+    fn parse_end_forspli(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            't' => {
+                self.push_step()?;
+                self.parse_end_forsplit()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_end_forspl(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'i' => {
+                self.push_step()?;
+                self.parse_end_forspli()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_end_forsp(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'l' => {
+                self.push_step()?;
+                self.parse_end_forspl()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
+    fn parse_end_fors(&mut self) -> StepResult<()> {
+        match self.current_or_unexpected_eof_in_tag()? {
+            'p' => {
+                self.push_step()?;
+                self.parse_end_forsp()
+            },
+            _ => self.unexpected_tag(),
+        }
+    }
+
     fn parse_end_for(&mut self) -> StepResult<()> {
         match self.current_or_unexpected_eof_in_tag()? {
             'd' => {
@@ -2671,6 +2966,10 @@ where
             'f' => {
                 self.push_step()?;
                 self.parse_end_forf()
+            },
+            's' => {
+                self.push_step()?;
+                self.parse_end_fors()
             },
             _ => self.unexpected_tag(),
         }

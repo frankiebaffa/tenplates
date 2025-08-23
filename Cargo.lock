@@ -4,11 +4,11 @@ version = 4
 
 [[package]]
 name = "tenplates"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "tenplates-core",
 ]
 
 [[package]]
 name = "tenplates-core"
-version = "0.2.1"
+version = "0.3.0"

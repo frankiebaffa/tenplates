@@ -1,2 +1,2 @@
 {% call "./function.tenplate" /%}\
-{% exec test("one", "two", "three") /%}\
+{{ test("one", "two", "three") }}\

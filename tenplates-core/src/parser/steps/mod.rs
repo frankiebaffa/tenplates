@@ -698,6 +698,16 @@ where
         }
      }
 
+    fn parse_value_as_number<S: AsRef<str>>(&mut self, tagname: S) -> StepResult<i64> {
+        self.parse_value(tagname)?
+            .into_internal("Cannot coerce an empty value into a number")
+            .into_step()?
+            .trim()
+            .parse::<i64>()
+            .into_internal("Failed to coerce value into a number")
+            .into_step()
+     }
+
     fn parse_function_args<S: AsRef<str>>(&mut self, tagname: S) -> StepResult<Vec<String>> {
         self.bypass_whitespace()?;
         self.tag_expect_char(tagname.as_ref(), |c| matches!(c, '('))?;

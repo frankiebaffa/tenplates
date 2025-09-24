@@ -5,7 +5,6 @@ use {
     std::{
         collections::HashMap,
         fmt::Debug,
-        num,
     },
     std::path::{ Path, PathBuf, },
 };
@@ -87,10 +86,6 @@ impl Context {
     pub(crate) fn path<K: AsRef<str>>(&self, key: K) -> Option<PathBuf> {
         let variables = self.variables(key)?;
         Some(variables.last().unwrap().value_as_path())
-    }
-
-    pub(crate) fn value_as_i64<K: AsRef<str>>(&self, key: K) -> Result<i64, num::ParseIntError> {
-        self.value(key).unwrap_or(&String::from("0")).trim().parse::<i64>()
     }
 
     pub(crate) fn values<K: AsRef<str>>(&self, key: K) -> Option<Vec<&String>> {

@@ -1,0 +1,2 @@
+{% call "./fn.tenplate" /%}\
+{{ rel("test.txt") }}\

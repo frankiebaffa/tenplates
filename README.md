@@ -47,7 +47,7 @@ along the way.
 
 ```tenplate
 {% call "./functions/header.tenplate" /%}\
-{% exec header("2", "Hello") /%}
+{{ header("2", "Hello") }}
 ```
 
 ```txt
@@ -56,7 +56,7 @@ along the way.
 
 The following other tag(s) were used in this example.
 
-- [_exec_](#t-exec)
+- [_get_](#t-get)
 - [_fn_](#t-fn)
 
 ### <a id="comment">Comment</a>
@@ -108,33 +108,6 @@ The following other tag(s) were used in this example.
 
 - [_set_](#t-set)
 
-### <a id="t-exec">Exec</a>
-
-Executes a function already read into the current [context](#g-context).
-Arguments can be excluded from right-to-left.
-
-```tenplate
-{% fn commas(a, b, c) %}\
-    {{ a }}, {{ b }}{% if c %}, {{ c }}{% /if %}\
-{% /fn %}\
-
-{% set d %}foo{% /set %}\
-{% set e %}bar{% /set %}\
-
-{% exec commas(d, e, "baz") /%}
-{% exec commas(d, e) /%}
-```
-
-```txt
-foo, bar, baz
-foo, bar
-```
-
-The following other tag(s) were used in this example.
-
-- [_fn_](#t-fn)
-- [_set_](#t-set)
-
 ### <a id="t-extend">Extend</a>
 
 Sets a single file as an outer template to process with the result of the
@@ -183,15 +156,15 @@ The following other tag(s) were used in this example.
 ### <a id="t-fn">Fn</a>
 
 Registers a [function](#g-function) in [context](#g-context) which can be called
-using the [exec](#t-exec) tag. A function can have anywhere from 0 to _n_
+using the [get](#t-get) tag. A function can have anywhere from 0 to _n_
 arguments.
 
 ```tenplate
 {% fn commas(one, two, three) %}\
     {{ one }}, {{ two }}{% if three %}, {{ three }}{% /if %}.\
 {% /fn %}\
-{% exec commas("First", "Second", "Third") /%}
-{% exec commas("First", "Second") /%}
+{{ commas("First", "Second", "Third") }}
+{{ commas("First", "Second") }}
 ```
 
 ```txt
@@ -201,7 +174,7 @@ First, Second.
 
 The following other tag(s) were used in this example.
 
-- [_exec_](#t-exec)
+- [_get_](#t-get)
 - [_if_](#t-if)
 
 ### <a id="t-fordir">Fordir / Else</a>
@@ -391,7 +364,8 @@ provided literally or from [context](#g-context) as well. The optional
 
 ### <a id="t-get">Get</a>
 
-Gets a value from a [variable](#g-variable) in [context](#g-context).
+Gets a value from a [variable](#g-variable) in [context](#g-context) or calls
+a function in [context](#g-context).
 
 ```tenplate
 {% set msg %}Hi{% /set %}\
@@ -404,6 +378,28 @@ Hi
 
 The following other tag(s) were used in this example.
 
+- [_set_](#t-set)
+
+```tenplate
+{% fn commas(a, b, c) %}\
+    {{ a }}, {{ b }}{% if c %}, {{ c }}{% /if %}\
+{% /fn %}\
+
+{% set d %}foo{% /set %}\
+{% set e %}bar{% /set %}\
+
+{{ commas(d, e, "baz") }}
+{{{ commas(d, e) }}
+```
+
+```txt
+foo, bar, baz
+foo, bar
+```
+
+The following other tag(s) were used in this example.
+
+- [_fn_](#t-fn)
 - [_set_](#t-set)
 
 ### <a id="t-if">If / Else</a>

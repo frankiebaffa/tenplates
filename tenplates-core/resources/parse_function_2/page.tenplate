@@ -3,5 +3,5 @@
 {% /fn %}\
 {% set first %}One{% /set %}\
 {% set second %}Two{% /set %}\
-{% exec test(first, second, "Third") /%}
-{% exec test ("Fourth", "Fifth") /%}
+{{ test(first, second, "Third") }}
+{{ test ("Fourth", "Fifth") }}

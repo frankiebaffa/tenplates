@@ -167,7 +167,7 @@ fn main() {
         let mut trailing = Vec::new();
         trailing.push(arg);
 
-        while let Some(arg) = args.next() {
+        for arg in args {
             trailing.push(arg);
         }
 

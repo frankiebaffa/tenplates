@@ -468,11 +468,7 @@ where
 
             self.output_mut().into_step()?.clear_buffer();
 
-            let variable = self.parse_variable_name("add")?;
-            let value = self.context().into_step()?
-                .value_as_i64(&variable)
-                .into_internal("Failed to parse variable as a number")
-                .into_step()?;
+            let value = self.parse_value_as_number("add")?;
 
             self.expect_end_of_tag("add")?;
 
@@ -764,11 +760,7 @@ where
 
             self.output_mut().into_step()?.clear_buffer();
 
-            let variable = self.parse_variable_name("div")?;
-            let value = self.context().into_step()?
-                .value_as_i64(&variable)
-                .into_internal("Failed to parse variable as a number")
-                .into_step()?;
+            let value = self.parse_value_as_number("div")?;
 
             self.expect_end_of_tag("div")?;
 
@@ -865,62 +857,6 @@ where
         }
     }
 
-    fn parse_exec(&mut self) -> StepResult<()> {
-        if self.bypass() {
-            if !self.buffer_whitespace_enforce_one()? {
-                return self.unknown_tag();
-            }
-
-            self.buffer_all_until_end_of_self_closing_tag("exec")?;
-            self.output_mut().into_step()?.flush_buffer_to_content();
-
-            Ok(())
-        }
-        else {
-            self.output_mut().into_step()?.clear_buffer();
-            if !self.bypass_whitespace_enforce_one()? {
-                return self.unknown_tag();
-            }
-
-            let alias = self.parse_variable_name("exec")?;
-
-            let function = self.context().into_step()?.function(&alias)
-                .into_internal(format!("Function '{alias}' never defined"))
-                .into_step()?
-                .to_owned();
-
-            let mut args = self.parse_function_arg_values("exec")?.into_iter();
-            let mut ctx = self.context().into_step()?.to_owned();
-
-            for named in function.args().iter() {
-                ctx.remove_variable(named);
-
-                if let Some(Some(arg)) = args.next() {
-                    ctx.add_variable(named, self.input().into_step()?.path(), &arg);
-                }
-            }
-
-            self.expect_end_of_self_close_tag("exec")?;
-
-            // make sure we write all buffered content before spawning the sealed
-            // parser
-            self.output_mut().into_step()?.flush_buffer_to_content();
-            self.parse_limited_sealed(ctx, function.as_bytes(), ParseUntil::EndFn).into_step()?;
-
-            Ok(())
-        }
-    }
-
-    fn parse_exe(&mut self) -> StepResult<()> {
-        match self.current_or_unexpected_eof_in_tag()? {
-            'c' => {
-                self.push_step()?;
-                self.parse_exec()
-            },
-            _ => self.unexpected_tag(),
-        }
-    }
-
     fn parse_extend_tag(&mut self) -> StepResult<()> {
         if self.bypass() {
             if !self.buffer_whitespace_enforce_one()? {
@@ -980,10 +916,6 @@ where
 
     fn parse_ex(&mut self) -> StepResult<()> {
         match self.current_or_unexpected_eof_in_tag()? {
-            'e' => {
-                self.push_step()?;
-                self.parse_exe()
-            },
             't' => {
                 self.push_step()?;
                 self.parse_ext()
@@ -2069,11 +2001,7 @@ where
 
             self.output_mut().into_step()?.clear_buffer();
 
-            let variable = self.parse_variable_name("mod")?;
-            let value = self.context().into_step()?
-                .value_as_i64(&variable)
-                .into_internal("Failed to parse variable as a number")
-                .into_step()?;
+            let value = self.parse_value_as_number("mod")?;
 
             self.expect_end_of_tag("mod")?;
 
@@ -2131,11 +2059,7 @@ where
 
             self.output_mut().into_step()?.clear_buffer();
 
-            let variable = self.parse_variable_name("mul")?;
-            let value = self.context().into_step()?
-                .value_as_i64(&variable)
-                .into_internal("Failed to parse variable as a number")
-                .into_step()?;
+            let value = self.parse_value_as_number("mul")?;
 
             self.expect_end_of_tag("mul")?;
 
@@ -2380,11 +2304,7 @@ where
 
             self.output_mut().into_step()?.clear_buffer();
 
-            let variable = self.parse_variable_name("pow")?;
-            let value = self.context().into_step()?
-                .value_as_i64(&variable)
-                .into_internal("Failed to parse variable as a number")
-                .into_step()?;
+            let value = self.parse_value_as_number("pow")?;
 
             self.expect_end_of_tag("pow")?;
 
@@ -2520,11 +2440,7 @@ where
 
             self.output_mut().into_step()?.clear_buffer();
 
-            let variable = self.parse_variable_name("sub")?;
-            let value = self.context().into_step()?
-                .value_as_i64(&variable)
-                .into_internal("Failed to parse variable as a number")
-                .into_step()?;
+            let value = self.parse_value_as_number("sub")?;
 
             self.expect_end_of_tag("sub")?;
 
@@ -3583,12 +3499,43 @@ where
             self.bypass_whitespace()?;
 
             let alias = self.parse_variable_name("output")?;
-            let value = self.context().into_step()?.value(&alias);
 
-            let output = value.map_or(String::new(), |v| v.to_owned());
-            self.output_mut().into_step()?.write_str(&output);
+            self.bypass_whitespace()?;
 
-            self.output_mut().into_step()?.flush_buffer_to_content();
+            match self.current_or_unexpected_eof_in_tag()? {
+                '(' => {
+                    let function = self.context().into_step()?.function(&alias)
+                        .into_internal(format!("Function '{alias}' never defined"))
+                        .into_step()?
+                        .to_owned();
+
+                    let mut args = self.parse_function_arg_values("exec")?
+                        .into_iter();
+                    let mut ctx = self.context().into_step()?.to_owned();
+
+                    for named in function.args().iter() {
+                        ctx.remove_variable(named);
+
+                        if let Some(Some(arg)) = args.next() {
+                            ctx.add_variable(named, self.input().into_step()?
+                                .path(), &arg);
+                        }
+                    }
+
+                    // make sure we write all buffered content before spawning the sealed
+                    // parser
+                    self.output_mut().into_step()?.flush_buffer_to_content();
+                    self.parse_limited_sealed(ctx, function.as_bytes(), ParseUntil::EndFn)
+                        .into_step()?;
+                },
+                _ => {
+                    let value = self.context().into_step()?.value(&alias);
+
+                    let output = value.map_or(String::new(), |v| v.to_owned());
+                    self.output_mut().into_step()?.write_str(&output);
+                    self.output_mut().into_step()?.flush_buffer_to_content();
+                },
+            }
 
             self.bypass_whitespace()?;
             self.tag_expect_char("output", |c| matches!(c, '}'))?;

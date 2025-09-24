@@ -144,6 +144,8 @@ fn main() {
         // just a hyphen, signals read from stdin
         else if full_arg.starts_with('-') {
             read_stdin = true;
+
+            break
         }
         else {
             if path.is_some() {
@@ -152,11 +154,24 @@ fn main() {
             }
 
             path = Some(PathBuf::from(full_arg));
+
+            break
         }
     }
 
     if path.is_none() && !read_stdin {
         eprintln!("tenplates: path must be defined");
+        std::process::exit(1);
+    }
+    else if let Some(arg) = args.next() {
+        let mut trailing = Vec::new();
+        trailing.push(arg);
+
+        while let Some(arg) = args.next() {
+            trailing.push(arg);
+        }
+
+        eprintln!("tenplates: trailing arguments: {}", trailing.join(" "));
         std::process::exit(1);
     }
     else if read_stdin {

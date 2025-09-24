@@ -5,7 +5,6 @@ use {
     std::{
         collections::HashMap,
         fmt::Debug,
-        io,
         num,
     },
     std::path::{ Path, PathBuf, },
@@ -26,11 +25,11 @@ impl Variable {
         &self.value
     }
 
-    pub(crate) fn value_as_path(&self) -> io::Result<PathBuf> {
+    pub(crate) fn value_as_path(&self) -> PathBuf {
         let path = PathBuf::from(self.value());
 
         if path.is_absolute() {
-            return Ok(path);
+            return path;
         }
 
         let mut base = self.path.clone();
@@ -38,7 +37,7 @@ impl Variable {
 
         base.push(path);
 
-        Ok(base)
+        base
     }
 
     pub(crate) fn value_is_truthy<S: AsRef<str>>(value: Option<S>) -> bool {
@@ -85,13 +84,9 @@ impl Context {
         self.variables(key)?.last().map(|l| l.value())
     }
 
-    pub(crate) fn path<K: AsRef<str>>(&self, key: K) -> io::Result<Option<PathBuf>> {
-        let variables = match self.variables(key) {
-            Some(s) => s,
-            None => return Ok(None),
-        };
-
-        variables.last().unwrap().value_as_path().map(Some)
+    pub(crate) fn path<K: AsRef<str>>(&self, key: K) -> Option<PathBuf> {
+        let variables = self.variables(key)?;
+        Some(variables.last().unwrap().value_as_path())
     }
 
     pub(crate) fn value_as_i64<K: AsRef<str>>(&self, key: K) -> Result<i64, num::ParseIntError> {
@@ -123,11 +118,8 @@ impl Context {
             let popped = self.variables_mut(key.as_ref()).unwrap().pop();
 
             let variables = self.variables(key.as_ref());
-            if variables.is_some() {
-                let variables = variables.unwrap();
-                if variables.is_empty() {
-                    self.remove_variable(key.as_ref());
-                }
+            if let Some(variables) = variables && variables.is_empty() {
+                self.remove_variable(key.as_ref());
             }
 
             return popped;

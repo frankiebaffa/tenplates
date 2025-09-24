@@ -1,10 +1,9 @@
 tenplates: Compile tenplate files.
 
 USAGE:
-    tenplates -h
-    tenplates -v
-    tenplates [(-s|--set) <DKV>] <PATH>
-    tenplates -
+    tenplates (-h|--help)
+    tenplates (-v|--version)
+    tenplates [(-s|--set) <DKV>] (<PATH>|-)
 
 ARGUMENTS:
     -h|--help            Display this help message.

@@ -110,14 +110,14 @@ where
     W: Write + Debug,
     Self: Parser<R, W>,
 {
-    fn current_internal(&mut self) -> InternalResult<Option<char>> {
+    fn current_internal(&self) -> InternalResult<Option<char>> {
         match self.input()?.current() {
             Some(c) => Ok(Some(*c)),
             None => Ok(None),
         }
     }
 
-    fn current(&mut self) -> StepResult<Option<char>> {
+    fn current(&self) -> StepResult<Option<char>> {
         self.current_internal().into_step()
     }
 
@@ -131,7 +131,7 @@ where
         }
     }
 
-    fn current_or_break(&mut self) -> StepResult<char> {
+    fn current_or_break(&self) -> StepResult<char> {
         match self.current()? {
             Some(c) => Ok(c),
             None => {
@@ -227,7 +227,7 @@ where
         Err(Err(InternalError::new(format!("Unexpected EOF in tag '{}'", tagname.as_ref()))))
     }
 
-    fn tag_current_or_unexpected_eof<S>(&mut self, tagname: S) -> StepResult<char>
+    fn tag_current_or_unexpected_eof<S>(&self, tagname: S) -> StepResult<char>
     where
         S: AsRef<str>,
     {
@@ -444,7 +444,7 @@ where
         Ok(())
     }
 
-    fn tag_expect_char_internal<F, S>(&mut self, tagname: S, matches: F) -> StepResult<char>
+    fn tag_expect_char_internal<F, S>(&self, tagname: S, matches: F) -> StepResult<char>
     where
         S: AsRef<str>,
         F: FnOnce(char) -> bool,
@@ -673,7 +673,7 @@ where
     fn parse_variable_as_path<S: AsRef<str>>(&mut self, tagname: S) -> StepResult<Option<PathBuf>> {
         let alias = self.parse_variable_name(tagname)?;
 
-        self.context().into_step()?.path(&alias).into_internal("Failed to get path from value").into_step()
+        Ok(self.context().into_step()?.path(&alias))
     }
 
     fn parse_value<S: AsRef<str>>(&mut self, tagname: S) -> StepResult<Option<String>> {

@@ -210,6 +210,8 @@ where
                 None => return self.tag_unexpected_eof(&self.tagname),
             };
 
+            let tagname = self.tagname.to_owned();
+
             match c {
                 '(' => {
                     self.input_mut().into_step()?.step().into_step()?;
@@ -232,7 +234,7 @@ where
                     };
 
                     let condition = Self::parse_condition(
-                        self.tagname.to_owned(),
+                        &tagname,
                         self,
                         ParseUntil::ConditionEnd,
                         bypass,
@@ -265,54 +267,54 @@ where
                 _ => {
                     self.bypass_whitespace()?;
 
-                    let left_value = self.parse_value(self.tagname.to_owned())?;
+                    let left_value = self.parse_value(&tagname)?;
 
                     self.bypass_whitespace()?;
 
-                    match self.tag_current_or_unexpected_eof(self.tagname.to_owned())? {
+                    match self.tag_current_or_unexpected_eof(&tagname)? {
                         '=' => {
                             self.input_mut().into_step()?.step().into_step()?;
 
-                            match self.tag_current_or_unexpected_eof(self.tagname.to_owned())? {
+                            match self.tag_current_or_unexpected_eof(&tagname)? {
                                 '=' => {
                                     self.input_mut().into_step()?.step().into_step()?;
                                     self.bypass_whitespace()?;
 
-                                    let right_value = self.parse_value(self.tagname.to_owned())?;
+                                    let right_value = self.parse_value(&tagname)?;
                                     self.condition = Some(match self.bypass.as_ref() {
                                         Some(b) => Condition::from(*b),
                                         None => Condition::from(left_value == right_value),
                                     });
                                 },
-                                _ => return self.tag_unexpected_char_expected(self.tagname.to_owned(), "=")?,
+                                _ => return self.tag_unexpected_char_expected(&tagname, "=")?,
                             }
                         },
                         '!' => {
                             self.input_mut().into_step()?.step().into_step()?;
 
-                            match self.tag_current_or_unexpected_eof(self.tagname.to_owned())? {
+                            match self.tag_current_or_unexpected_eof(&tagname)? {
                                 '=' => {
                                     self.input_mut().into_step()?.step().into_step()?;
                                     self.bypass_whitespace()?;
 
-                                    let right_value = self.parse_value(self.tagname.to_owned())?;
+                                    let right_value = self.parse_value(&tagname)?;
                                     self.condition = Some(match self.bypass.as_ref() {
                                         Some(b) => Condition::from(*b),
                                         None => Condition::from(left_value != right_value),
                                     });
                                 },
-                                _ => return self.tag_unexpected_char_expected(self.tagname.to_owned(), "="),
+                                _ => return self.tag_unexpected_char_expected(&tagname, "="),
                             }
                         },
                         '>' => {
                             self.input_mut().into_step()?.step().into_step()?;
 
-                            match self.tag_current_or_unexpected_eof(self.tagname.to_owned())? {
+                            match self.tag_current_or_unexpected_eof(&tagname)? {
                                 '=' => {
                                     self.input_mut().into_step()?.step().into_step()?;
                                     self.bypass_whitespace()?;
 
-                                    let right_value = self.parse_value(self.tagname.to_owned())?;
+                                    let right_value = self.parse_value(&tagname)?;
                                     self.condition = Some(match self.bypass.as_ref() {
                                         Some(b) => Condition::from(*b),
                                         None => Condition::ge(left_value, right_value),
@@ -321,7 +323,7 @@ where
                                 _ => {
                                     self.bypass_whitespace()?;
 
-                                    let right_value = self.parse_value(self.tagname.to_owned())?;
+                                    let right_value = self.parse_value(&tagname)?;
 
                                     self.condition = Some(match self.bypass.as_ref() {
                                         Some(b) => Condition::from(*b),
@@ -333,12 +335,12 @@ where
                         '<' => {
                             self.input_mut().into_step()?.step().into_step()?;
 
-                            match self.tag_current_or_unexpected_eof(self.tagname.to_owned())? {
+                            match self.tag_current_or_unexpected_eof(&tagname)? {
                                 '=' => {
                                     self.input_mut().into_step()?.step().into_step()?;
                                     self.bypass_whitespace()?;
 
-                                    let right_value = self.parse_value(self.tagname.to_owned())?;
+                                    let right_value = self.parse_value(&tagname)?;
                                     self.condition = Some(match self.bypass.as_ref() {
                                         Some(b) => Condition::from(*b),
                                         None => Condition::le(left_value, right_value),
@@ -347,7 +349,7 @@ where
                                 _ => {
                                     self.bypass_whitespace()?;
 
-                                    let right_value = self.parse_value(self.tagname.to_owned())?;
+                                    let right_value = self.parse_value(&tagname)?;
                                     self.condition = Some(match self.bypass.as_ref() {
                                         Some(b) => Condition::from(*b),
                                         None => Condition::lt(left_value, right_value),
@@ -367,11 +369,11 @@ where
             }
 
             self.bypass_whitespace()?;
-            match self.tag_current_or_unexpected_eof(self.tagname.to_owned())? {
+            match self.tag_current_or_unexpected_eof(&tagname)? {
                 '&' => {
                     self.input_mut().into_step()?.step().into_step()?;
 
-                    match self.tag_current_or_unexpected_eof(self.tagname.to_owned())? {
+                    match self.tag_current_or_unexpected_eof(&tagname)? {
                         '&' => {
                             self.input_mut().into_step()?.step().into_step()?;
                             self.condition_mut().into_step()?.set_join(Join::And);
@@ -382,7 +384,7 @@ where
                 '|' => {
                     self.input_mut().into_step()?.step().into_step()?;
 
-                    match self.tag_current_or_unexpected_eof(self.tagname.to_owned())? {
+                    match self.tag_current_or_unexpected_eof(&tagname)? {
                         '|' => {
                             self.input_mut().into_step()?.step().into_step()?;
                             self.condition_mut().into_step()?.set_join(Join::Or);
